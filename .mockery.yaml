@@ -1,0 +1,11 @@
+all: false
+dir: "generated/mock{{.SrcPackageName}}"
+recursive: false
+filename: "mock_{{.InterfaceName}}.go"
+pkgname: "mock{{.SrcPackageName}}"
+
+packages:
+  github.com/dr-dobermann/gonfa/pkg/gonfa:
+    interfaces:
+      Guard:
+      Action:
