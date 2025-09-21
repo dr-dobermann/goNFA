@@ -14,7 +14,7 @@
 # Variables
 BINARY_DIR := bin
 EXAMPLES_DIR := examples
-MOCKS_DIR := mocks
+MOCKS_DIR := generated
 GO_FILES := $(shell find . -name "*.go" -not -path "./$(MOCKS_DIR)/*" -not -path "./vendor/*")
 
 # Default target
@@ -37,7 +37,7 @@ help:
 # Install required tools
 install:
 	@echo "Installing required tools..."
-	go install github.com/vektra/mockery/v2@latest
+	go install github.com/vektra/mockery/v3@v3.5.5
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Generate mocks

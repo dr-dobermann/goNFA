@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+        
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Run tests
+        run: |
+          go install github.com/vektra/mockery/v3@v3.5.5
+          mockery
+          go test -v -race ./pkg/...
+
+      - name: Build examples
+        run: |
+          mkdir -p release-artifacts
+          
+          # Build for multiple platforms
+          GOOS=linux GOARCH=amd64 go build -o release-artifacts/document_workflow-linux-amd64 examples/document_workflow.go
+          GOOS=windows GOARCH=amd64 go build -o release-artifacts/document_workflow-windows-amd64.exe examples/document_workflow.go
+          GOOS=darwin GOARCH=amd64 go build -o release-artifacts/document_workflow-darwin-amd64 examples/document_workflow.go
+          GOOS=darwin GOARCH=arm64 go build -o release-artifacts/document_workflow-darwin-arm64 examples/document_workflow.go
+          
+          # Copy example YAML
+          cp examples/document_workflow.yaml release-artifacts/
+          
+          # Create README for release
+          cat > release-artifacts/README.md << 'EOF'
+          # goNFA Release Artifacts
+          
+          This release contains:
+          - Pre-built example binaries for different platforms
+          - Example YAML configuration file
+          - Complete source code (see GitHub release)
+          
+          ## Running Examples
+          
+          1. Download the appropriate binary for your platform
+          2. Make it executable (Unix/Linux/macOS): `chmod +x document_workflow-*`
+          3. Run: `./document_workflow-<platform>`
+          
+          ## Using the Library
+          
+          Add to your Go project:
+          ```bash
+          go get github.com/dr-dobermann/gonfa@${{ github.ref_name }}
+          ```
+          
+          See the main repository for documentation and usage examples.
+          EOF
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-artifacts/*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

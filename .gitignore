@@ -32,6 +32,10 @@ go.work
 *.swp
 *.swo
 
+# Coverage report
+coverage.out
+coverage.html
+
 # OS generated files
 .DS_Store
 .DS_Store?
