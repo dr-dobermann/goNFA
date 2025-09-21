@@ -50,7 +50,7 @@ func createTestDefinition(t *testing.T) *definition.Definition {
 
 func TestNewMachine(t *testing.T) {
 	def := createTestDefinition(t)
-	machine := NewMachine(def)
+	machine := New(def)
 
 	assert.NotNil(t, machine)
 	assert.Equal(t, gonfa.State("Start"), machine.CurrentState())
@@ -73,7 +73,7 @@ func TestRestoreMachine(t *testing.T) {
 			},
 		}
 
-		machine, err := RestoreMachine(def, storable)
+		machine, err := Restore(def, storable)
 		assert.NoError(t, err)
 		assert.NotNil(t, machine)
 		assert.Equal(t, gonfa.State("Middle"), machine.CurrentState())
@@ -81,7 +81,7 @@ func TestRestoreMachine(t *testing.T) {
 	})
 
 	t.Run("nil storable", func(t *testing.T) {
-		machine, err := RestoreMachine(def, nil)
+		machine, err := Restore(def, nil)
 		assert.Error(t, err)
 		assert.Nil(t, machine)
 		assert.Contains(t, err.Error(), "storable state cannot be nil")
@@ -93,7 +93,7 @@ func TestRestoreMachine(t *testing.T) {
 			History:      []gonfa.HistoryEntry{},
 		}
 
-		machine, err := RestoreMachine(def, storable)
+		machine, err := Restore(def, storable)
 		assert.Error(t, err)
 		assert.Nil(t, machine)
 		assert.Contains(t, err.Error(), "current state cannot be empty")
@@ -102,7 +102,7 @@ func TestRestoreMachine(t *testing.T) {
 
 func TestCurrentState(t *testing.T) {
 	def := createTestDefinition(t)
-	machine := NewMachine(def)
+	machine := New(def)
 
 	assert.Equal(t, gonfa.State("Start"), machine.CurrentState())
 }
@@ -119,7 +119,7 @@ func TestFireSuccessfulTransition(t *testing.T) {
 		Build()
 	require.NoError(t, err)
 
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 	payload := "test payload"
 
@@ -151,7 +151,7 @@ func TestFireGuardFailure(t *testing.T) {
 		Build()
 	require.NoError(t, err)
 
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	success, err := machine.Fire(ctx, "ToEnd", nil)
@@ -177,7 +177,7 @@ func TestFireActionError(t *testing.T) {
 		Build()
 	require.NoError(t, err)
 
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	success, err := machine.Fire(ctx, "ToEnd", nil)
@@ -190,7 +190,7 @@ func TestFireActionError(t *testing.T) {
 
 func TestFireNoTransition(t *testing.T) {
 	def := createTestDefinition(t)
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	success, err := machine.Fire(ctx, "NonExistentEvent", nil)
@@ -215,7 +215,7 @@ func TestFireWithStateActions(t *testing.T) {
 		Build()
 	require.NoError(t, err)
 
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	success, err := machine.Fire(ctx, "ToEnd", nil)
@@ -247,7 +247,7 @@ func TestFireWithHooks(t *testing.T) {
 		Build()
 	require.NoError(t, err)
 
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	t.Run("successful transition calls success hook", func(t *testing.T) {
@@ -261,7 +261,7 @@ func TestFireWithHooks(t *testing.T) {
 
 	t.Run("failed transition calls failure hook", func(t *testing.T) {
 		// Reset machine
-		machine = NewMachine(def)
+		machine = New(def)
 		successHook.executed = false
 		failureHook.executed = false
 
@@ -279,7 +279,7 @@ func TestFireWithHooks(t *testing.T) {
 
 func TestMarshal(t *testing.T) {
 	def := createTestDefinition(t)
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	// Make a transition to create history
@@ -300,7 +300,7 @@ func TestMarshal(t *testing.T) {
 
 func TestHistory(t *testing.T) {
 	def := createTestDefinition(t)
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	// Initially empty
@@ -339,7 +339,7 @@ func TestHistory(t *testing.T) {
 
 func TestConcurrentAccess(t *testing.T) {
 	def := createTestDefinition(t)
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	// Test concurrent operations on the SAME machine instance
@@ -352,7 +352,7 @@ func TestConcurrentAccess(t *testing.T) {
 			require.NoError(t, err)
 			// Create a new machine for the next iteration
 			// but don't reassign the shared variable
-			tempMachine := NewMachine(def)
+			tempMachine := New(def)
 			_, err = tempMachine.Fire(ctx, "ToMiddle", nil)
 			require.NoError(t, err)
 		}
@@ -403,7 +403,7 @@ func TestNFABehavior(t *testing.T) {
 		Build()
 	require.NoError(t, err)
 
-	machine := NewMachine(def)
+	machine := New(def)
 	ctx := context.Background()
 
 	// First guard succeeds, second fails - should take Path1

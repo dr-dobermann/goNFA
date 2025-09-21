@@ -142,7 +142,7 @@ func main() {
 	}
 
 	// Create a machine instance
-	sm := machine.NewMachine(definition)
+	sm := machine.New(definition)
 
 	// Create a document
 	doc := &Document{
@@ -195,7 +195,7 @@ func main() {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	restoredMachine, err := machine.RestoreMachine(definition, &restoredStorable)
+	restoredMachine, err := machine.Restore(definition, &restoredStorable)
 	if err != nil {
 		log.Fatalf("Failed to restore machine: %v", err)
 	}

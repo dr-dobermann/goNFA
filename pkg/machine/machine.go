@@ -31,8 +31,8 @@ type Machine struct {
 	history      []gonfa.HistoryEntry
 }
 
-// NewMachine creates a new Machine instance from a Definition.
-func NewMachine(def *definition.Definition) *Machine {
+// New creates a new Machine instance from a Definition.
+func New(def *definition.Definition) *Machine {
 	return &Machine{
 		definition:   def,
 		currentState: def.InitialState(),
@@ -40,8 +40,8 @@ func NewMachine(def *definition.Definition) *Machine {
 	}
 }
 
-// RestoreMachine restores a Machine instance from a Storable state.
-func RestoreMachine(
+// Restore restores a Machine instance from a Storable state.
+func Restore(
 	def *definition.Definition,
 	state *gonfa.Storable,
 ) (*Machine, error) {

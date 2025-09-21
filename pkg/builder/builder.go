@@ -128,7 +128,7 @@ func (b *Builder) Build() (*definition.Definition, error) {
 	// Validate that WithGuards/WithActions were called appropriately
 	// This is automatically handled by the lastTransition pointer
 
-	return definition.NewDefinition(
+	return definition.New(
 		b.initialState,
 		b.states,
 		b.transitions,
