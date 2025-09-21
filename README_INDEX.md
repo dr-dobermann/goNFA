@@ -5,6 +5,7 @@ This document provides links to all documentation available in the goNFA project
 ## Project Overview
 
 - **[Main README](README.md)** - Project overview, quick start, and usage examples
+- **[README на русском](README.ru.md)** - Русская версия основного README
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 - **[License](LICENSE)** - LGPL 2.1 license terms
 

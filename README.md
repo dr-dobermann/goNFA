@@ -1,8 +1,14 @@
 # goNFA - Nondeterministic Finite Automaton Go Library
 
-[![Go Version](https://img.shields.io/badge/Go-%3E%3D%201.21-blue.svg)](https://golang.org/)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/dr-dobermann/gonfa)](https://golang.org/)
+[![GitHub release](https://img.shields.io/github/v/release/dr-dobermann/gonfa)](https://github.com/dr-dobermann/gonfa/releases)
 [![License](https://img.shields.io/badge/License-LGPL%202.1-green.svg)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dr-dobermann/gonfa)](https://goreportcard.com/report/github.com/dr-dobermann/gonfa)
+[![codecov](https://codecov.io/gh/dr-dobermann/gonfa/branch/master/graph/badge.svg)](https://codecov.io/gh/dr-dobermann/gonfa)
+[![CI/CD Pipeline](https://github.com/dr-dobermann/gonfa/workflows/CI/CD%20Pipeline/badge.svg)](https://github.com/dr-dobermann/gonfa/actions)
+[![GoDoc](https://godoc.org/github.com/dr-dobermann/gonfa?status.svg)](https://godoc.org/github.com/dr-dobermann/gonfa)
+[![GitHub issues](https://img.shields.io/github/issues/dr-dobermann/gonfa)](https://github.com/dr-dobermann/gonfa/issues)
+[![GitHub stars](https://img.shields.io/github/stars/dr-dobermann/gonfa)](https://github.com/dr-dobermann/gonfa/stargazers)
 
 A universal, lightweight and idiomatic Go library for creating and managing non-deterministic finite automata (NFA). goNFA provides reliable state management mechanisms for complex systems such as business process engines (BPM), workflow systems, and any application requiring sophisticated state machine logic.
 
@@ -244,6 +250,7 @@ This project is licensed under the GNU Lesser General Public License v2.1 - see 
 - [GitHub Repository](https://github.com/dr-dobermann/gonfa)
 - [Issue Tracker](https://github.com/dr-dobermann/gonfa/issues)
 - [Discussions](https://github.com/dr-dobermann/gonfa/discussions)
+- [Русская версия README](README.ru.md)
 
 ---
 
