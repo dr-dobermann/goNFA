@@ -348,11 +348,13 @@ func TestConcurrentAccess(t *testing.T) {
 	// Goroutine 1: Fire events
 	go func() {
 		for i := 0; i < 10; i++ {
-			machine.Fire(ctx, "ToMiddle", nil)
+			_, err := machine.Fire(ctx, "ToMiddle", nil)
+			require.NoError(t, err)
 			// Create a new machine for the next iteration
 			// but don't reassign the shared variable
 			tempMachine := NewMachine(def)
-			tempMachine.Fire(ctx, "ToMiddle", nil)
+			_, err = tempMachine.Fire(ctx, "ToMiddle", nil)
+			require.NoError(t, err)
 		}
 		done <- true
 	}()
@@ -368,7 +370,9 @@ func TestConcurrentAccess(t *testing.T) {
 	// Goroutine 3: Marshal machine
 	go func() {
 		for i := 0; i < 50; i++ {
-			machine.Marshal()
+			storable, err := machine.Marshal()
+			require.NoError(t, err)
+			require.NotNil(t, storable)
 		}
 		done <- true
 	}()
