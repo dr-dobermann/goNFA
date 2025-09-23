@@ -76,7 +76,7 @@ func main() {
     }
 
     // Create machine instance
-    sm := machine.NewMachine(definition)
+    sm := machine.New(definition)
     
     // Fire events
     ctx := context.Background()
@@ -137,12 +137,12 @@ registry := registry.New()
 registry.RegisterGuard("isManager", &ManagerGuard{})
 registry.RegisterAction("notifyAuthor", &NotifyAction{})
 
-definition, err := definition.LoadDefinition(file, registry)
+definition, err := definition.Load(file, registry)
 if err != nil {
     log.Fatal(err)
 }
 
-machine := machine.NewMachine(definition)
+machine := machine.New(definition)
 ```
 
 ## Architecture
