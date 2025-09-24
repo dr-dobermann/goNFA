@@ -19,7 +19,9 @@
 - **Fluent Builder API**: Интуитивное программное создание конечных автоматов
 - **YAML конфигурация**: Загрузка определений конечных автоматов из YAML файлов
 - **Персистентность состояния**: Сериализация и восстановление состояния машины для долгоживущих процессов
-- **Расширяемые Actions и Guards**: Плагинная система для пользовательской бизнес-логики
+- **Интеграция бизнес-объектов**: Прикрепление пользовательских бизнес-объектов как StateExtender
+- **Поддержка финальных состояний**: Явная поддержка принимающих/финальных состояний
+- **Расширяемые Actions и Guards**: Плагинная система для пользовательской бизнес-логики с полным доступом к контексту
 - **Комплексное тестирование**: >90% покрытие кода с обширными unit и интеграционными тестами
 - **Нулевые внешние зависимости**: Основная библиотека не имеет внешних зависимостей (кроме поддержки YAML)
 
@@ -46,19 +48,30 @@ import (
     "github.com/dr-dobermann/gonfa/pkg/machine"
 )
 
+// Document представляет ваш бизнес-объект
+type Document struct {
+    ID     string
+    Title  string
+    Author string
+}
+
 // Простая реализация guard
 type ManagerGuard struct{}
 
-func (g *ManagerGuard) Check(ctx context.Context, payload gonfa.Payload) bool {
-    // Ваша бизнес-логика здесь
+func (g *ManagerGuard) Check(ctx context.Context, state gonfa.MachineState, payload gonfa.Payload) bool {
+    // Доступ к бизнес-объекту через StateExtender
+    doc := state.StateExtender().(*Document)
+    fmt.Printf("Проверка одобрения для документа: %s\n", doc.Title)
     return true
 }
 
 // Простая реализация action
 type NotifyAction struct{}
 
-func (a *NotifyAction) Execute(ctx context.Context, payload gonfa.Payload) error {
-    fmt.Println("Уведомление отправлено!")
+func (a *NotifyAction) Execute(ctx context.Context, state gonfa.MachineState, payload gonfa.Payload) error {
+    // Доступ к бизнес-объекту через StateExtender
+    doc := state.StateExtender().(*Document)
+    fmt.Printf("Уведомление о документе: %s\n", doc.Title)
     return nil
 }
 
@@ -66,6 +79,7 @@ func main() {
     // Создание определения конечного автомата
     definition, err := builder.New().
         InitialState("Черновик").
+        FinalStates("Одобрено").
         AddTransition("Черновик", "НаРассмотрении", "Отправить").
         WithActions(&NotifyAction{}).
         AddTransition("НаРассмотрении", "Одобрено", "Одобрить").
@@ -75,18 +89,29 @@ func main() {
         log.Fatal(err)
     }
 
-    // Создание экземпляра машины
-    sm := machine.NewMachine(definition)
+    // Создание бизнес-объекта
+    doc := &Document{
+        ID:     "DOC-001",
+        Title:  "Предложение проекта",
+        Author: "Алиса Смит",
+    }
+
+    // Создание экземпляра машины с бизнес-объектом
+    sm, err := machine.New(definition, doc)
+    if err != nil {
+        log.Fatal(err)
+    }
     
     // Запуск событий
     ctx := context.Background()
-    success, err := sm.Fire(ctx, "Отправить", "данные документа")
+    success, err := sm.Fire(ctx, "Отправить", nil)
     if err != nil {
         log.Fatal(err)
     }
     
     fmt.Printf("Переход успешен: %v\n", success)
     fmt.Printf("Текущее состояние: %s\n", sm.CurrentState())
+    fmt.Printf("Финальное состояние: %v\n", sm.IsInFinalState())
 }
 ```
 

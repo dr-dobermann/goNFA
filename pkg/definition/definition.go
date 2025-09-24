@@ -43,6 +43,7 @@ type Hooks struct {
 // It contains all states, transitions, and associated actions/guards.
 type Definition struct {
 	initialState gonfa.State
+	finalStates  map[gonfa.State]bool // Set of final (accepting) states
 	states       map[gonfa.State]StateConfig
 	transitions  []Transition
 	hooks        Hooks
@@ -51,6 +52,7 @@ type Definition struct {
 // New creates a new Definition with the given parameters.
 func New(
 	initialState gonfa.State,
+	finalStates []gonfa.State,
 	states map[gonfa.State]StateConfig,
 	transitions []Transition,
 	hooks Hooks,
@@ -60,10 +62,7 @@ func New(
 	}
 
 	// Validate that initial state exists in states or transitions
-	stateExists := false
-	if _, exists := states[initialState]; exists {
-		stateExists = true
-	}
+	_, stateExists := states[initialState]
 
 	if !stateExists {
 		for _, t := range transitions {
@@ -80,6 +79,12 @@ func New(
 			initialState)
 	}
 
+	// Create final states map
+	finalStatesMap := make(map[gonfa.State]bool, len(finalStates))
+	for _, state := range finalStates {
+		finalStatesMap[state] = true
+	}
+
 	// Copy states map to ensure immutability
 	statesCopy := make(map[gonfa.State]StateConfig, len(states))
 	for k, v := range states {
@@ -92,6 +97,7 @@ func New(
 
 	return &Definition{
 		initialState: initialState,
+		finalStates:  finalStatesMap,
 		states:       statesCopy,
 		transitions:  transitionsCopy,
 		hooks:        hooks,
@@ -101,6 +107,20 @@ func New(
 // InitialState returns the initial state of the machine.
 func (d *Definition) InitialState() gonfa.State {
 	return d.initialState
+}
+
+// FinalStates returns a copy of the final states set.
+func (d *Definition) FinalStates() map[gonfa.State]bool {
+	finalStates := make(map[gonfa.State]bool, len(d.finalStates))
+	for k, v := range d.finalStates {
+		finalStates[k] = v
+	}
+	return finalStates
+}
+
+// IsFinalState checks if the given state is a final state.
+func (d *Definition) IsFinalState(state gonfa.State) bool {
+	return d.finalStates[state]
 }
 
 // States returns a copy of the states configuration.

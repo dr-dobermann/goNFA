@@ -11,7 +11,10 @@ This document provides links to all documentation available in the goNFA project
 
 ## Technical Documentation
 
-- **[Technical Specification](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.md)** - Complete technical requirements and architecture specification
+- **[Technical Specification v3.8 (EN)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.v3.8.md)** - Complete technical requirements and architecture specification (latest version)
+- **[Technical Specification v3.8 (RU)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.ru.v3.8.md)** - Полная техническая спецификация и архитектура (последняя версия)
+- **[Technical Specification v2.6 (EN)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.v2.6.md)** - Previous version specification
+- **[Technical Specification v2.6 (RU)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.ru.v2.6.md)** - Предыдущая версия спецификации
 
 ## Package Documentation
 

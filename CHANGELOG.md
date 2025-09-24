@@ -5,7 +5,30 @@ All notable changes to the goNFA project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.8.0] - 2025-09-24
+
+### Added
+- **StateExtender support**: User-defined business objects can now be attached to Machine instances
+- **MachineState interface**: Read-only access to machine state and business object context
+- **Final states support**: Explicit support for accepting/final states in Definition and Builder
+- **Enhanced Guard/Action signatures**: Now receive MachineState for full context access
+- **Improved architecture**: Clean separation between business logic and FSM logic
+- **Updated examples**: Comprehensive examples demonstrating new architecture
+- **Enhanced YAML support**: Support for `finalStates` in YAML configuration
+
+### Changed
+- **Breaking**: Guard and Action interfaces now require `MachineState` parameter
+- **Breaking**: Machine.New() and Machine.Restore() now require StateExtender parameter
+- **Breaking**: Updated all examples and documentation to reflect new architecture
+- **Improved**: Better separation of concerns between business objects and FSM state
+- **Improved**: Enhanced type safety with StateExtender pattern
+
+### Fixed
+- **Fixed**: Deadlock issues in StateExtender access during transitions
+- **Fixed**: Improved thread safety in Machine operations
+- **Fixed**: Better error handling in Guard/Action execution
+
+## [2.6.0] - 2025-09-20
 
 ### Added
 - Initial implementation of goNFA library

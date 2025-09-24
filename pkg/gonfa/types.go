@@ -24,23 +24,38 @@ type State string
 // Event represents an event that triggers a transition.
 type Event string
 
-// Payload is an interface for passing runtime data.
+// Payload is an interface for passing event-specific runtime data.
 type Payload interface{}
+
+// StateExtender is a placeholder for any user-defined business object.
+type StateExtender interface{}
+
+// MachineState provides a read-only view of the machine's state.
+type MachineState interface {
+	// CurrentState returns the current state of the machine.
+	CurrentState() State
+	// History returns the transition history.
+	History() []HistoryEntry
+	// IsInFinalState checks if the machine is currently in a final (accepting) state.
+	IsInFinalState() bool
+	// StateExtender returns the attached user-defined business object.
+	StateExtender() StateExtender
+}
 
 // Guard is the interface for guard objects.
 // Guards are used to control whether a transition can occur.
 type Guard interface {
 	// Check evaluates whether the transition should be allowed.
 	// Returns true if the transition is permitted, false otherwise.
-	Check(ctx context.Context, payload Payload) bool
+	Check(ctx context.Context, state MachineState, payload Payload) bool
 }
 
 // Action is the interface for action and hook objects.
 // Actions are executed during transitions, state entry/exit, or as hooks.
 type Action interface {
-	// Execute performs the action with the given context and payload.
+	// Execute performs the action with the given context, state, and payload.
 	// Returns an error if the action fails.
-	Execute(ctx context.Context, payload Payload) error
+	Execute(ctx context.Context, state MachineState, payload Payload) error
 }
 
 // HistoryEntry records a single transition in the machine's history.

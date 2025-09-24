@@ -25,6 +25,7 @@ import (
 // yamlDefinition represents the YAML structure for loading definitions
 type yamlDefinition struct {
 	InitialState string                     `yaml:"initialState"`
+	FinalStates  []string                   `yaml:"finalStates,omitempty"`
 	Hooks        yamlHooks                  `yaml:"hooks,omitempty"`
 	States       map[string]yamlStateConfig `yaml:"states,omitempty"`
 	Transitions  []yamlTransition           `yaml:"transitions"`
@@ -155,9 +156,16 @@ func LoadDefinition(
 		hooks.OnFailure = append(hooks.OnFailure, action)
 	}
 
+	// Convert final states
+	var finalStates []gonfa.State
+	for _, stateName := range yamlDef.FinalStates {
+		finalStates = append(finalStates, gonfa.State(stateName))
+	}
+
 	// Create and return the definition
 	return New(
 		gonfa.State(yamlDef.InitialState),
+		finalStates,
 		states,
 		transitions,
 		hooks,

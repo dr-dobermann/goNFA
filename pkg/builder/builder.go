@@ -22,6 +22,7 @@ import (
 // Builder provides a fluent interface for creating a Definition.
 type Builder struct {
 	initialState   gonfa.State
+	finalStates    []gonfa.State
 	states         map[gonfa.State]definition.StateConfig
 	transitions    []definition.Transition
 	hooks          definition.Hooks
@@ -38,6 +39,13 @@ func New() *Builder {
 // InitialState sets the initial state for the state machine.
 func (b *Builder) InitialState(s gonfa.State) *Builder {
 	b.initialState = s
+	return b
+}
+
+// FinalStates sets the final (accepting) states for the state machine.
+// Can be called multiple times to add more states.
+func (b *Builder) FinalStates(states ...gonfa.State) *Builder {
+	b.finalStates = append(b.finalStates, states...)
 	return b
 }
 
@@ -130,6 +138,7 @@ func (b *Builder) Build() (*definition.Definition, error) {
 
 	return definition.New(
 		b.initialState,
+		b.finalStates,
 		b.states,
 		b.transitions,
 		b.hooks,
