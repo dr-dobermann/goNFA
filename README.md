@@ -19,7 +19,9 @@ A universal, lightweight and idiomatic Go library for creating and managing non-
 - **Fluent Builder API**: Intuitive programmatic state machine construction
 - **YAML Configuration**: Load state machine definitions from YAML files
 - **State Persistence**: Serialize and restore machine state for long-running processes
-- **Extensible Actions & Guards**: Plugin-based system for custom business logic
+- **Business Object Integration**: Attach user-defined business objects as StateExtenders
+- **Final States Support**: Explicit support for accepting/final states
+- **Extensible Actions & Guards**: Plugin-based system for custom business logic with full context access
 - **Comprehensive Testing**: >90% test coverage with extensive unit and integration tests
 - **Zero External Dependencies**: Core library has no external dependencies (except for YAML support)
 
@@ -46,19 +48,30 @@ import (
     "github.com/dr-dobermann/gonfa/pkg/machine"
 )
 
+// Document represents your business object
+type Document struct {
+    ID     string
+    Title  string
+    Author string
+}
+
 // Simple guard implementation
 type ManagerGuard struct{}
 
-func (g *ManagerGuard) Check(ctx context.Context, payload gonfa.Payload) bool {
-    // Your business logic here
+func (g *ManagerGuard) Check(ctx context.Context, state gonfa.MachineState, payload gonfa.Payload) bool {
+    // Access business object through StateExtender
+    doc := state.StateExtender().(*Document)
+    fmt.Printf("Checking approval for document: %s\n", doc.Title)
     return true
 }
 
 // Simple action implementation
 type NotifyAction struct{}
 
-func (a *NotifyAction) Execute(ctx context.Context, payload gonfa.Payload) error {
-    fmt.Println("Notification sent!")
+func (a *NotifyAction) Execute(ctx context.Context, state gonfa.MachineState, payload gonfa.Payload) error {
+    // Access business object through StateExtender
+    doc := state.StateExtender().(*Document)
+    fmt.Printf("Notifying about document: %s\n", doc.Title)
     return nil
 }
 
@@ -66,6 +79,7 @@ func main() {
     // Build state machine definition
     definition, err := builder.New().
         InitialState("Draft").
+        FinalStates("Approved").
         AddTransition("Draft", "InReview", "Submit").
         WithActions(&NotifyAction{}).
         AddTransition("InReview", "Approved", "Approve").
@@ -75,18 +89,29 @@ func main() {
         log.Fatal(err)
     }
 
-    // Create machine instance
-    sm := machine.NewMachine(definition)
+    // Create business object
+    doc := &Document{
+        ID:     "DOC-001",
+        Title:  "Project Proposal",
+        Author: "Alice Smith",
+    }
+
+    // Create machine instance with business object
+    sm, err := machine.New(definition, doc)
+    if err != nil {
+        log.Fatal(err)
+    }
     
     // Fire events
     ctx := context.Background()
-    success, err := sm.Fire(ctx, "Submit", "document payload")
+    success, err := sm.Fire(ctx, "Submit", nil)
     if err != nil {
         log.Fatal(err)
     }
     
     fmt.Printf("Transition successful: %v\n", success)
     fmt.Printf("Current state: %s\n", sm.CurrentState())
+    fmt.Printf("Is final state: %v\n", sm.IsInFinalState())
 }
 ```
 
@@ -97,6 +122,11 @@ Create a state machine from YAML configuration:
 ```yaml
 # workflow.yaml
 initialState: Draft
+
+# Final (accepting) states
+finalStates:
+  - Approved
+  - Archived
 
 hooks:
   onSuccess:
@@ -110,6 +140,9 @@ states:
       - assignReviewer
     onExit:
       - cleanupTask
+  Approved:
+    onEntry:
+      - archiveDocument
 
 transitions:
   - from: Draft
@@ -142,7 +175,14 @@ if err != nil {
     log.Fatal(err)
 }
 
-machine := machine.NewMachine(definition)
+// Create business object
+doc := &Document{ID: "DOC-001", Title: "Project Proposal"}
+
+// Create machine with business object
+machine, err := machine.New(definition, doc)
+if err != nil {
+    log.Fatal(err)
+}
 ```
 
 ## Architecture
@@ -150,9 +190,11 @@ machine := machine.NewMachine(definition)
 goNFA separates static **Definitions** from dynamic **Machine instances**:
 
 - **Definition**: Immutable description of the state graph, transitions, and associated actions
-- **Machine**: Runtime instance that "lives" on the Definition graph with current state
+- **Machine**: Runtime instance that "lives" on the Definition graph with current state and attached business object
+- **StateExtender**: User-defined business object attached to Machine instances
+- **MachineState**: Read-only interface providing access to machine state and business object
 - **Registry**: Maps string names to Guard/Action implementations for YAML loading
-- **Builder**: Fluent API for programmatic Definition creation
+- **Builder**: Fluent API for programmatic Definition creation with final states support
 
 ## Package Structure
 

@@ -24,11 +24,13 @@ import (
 )
 
 // Document represents a document in the workflow
+// This serves as the StateExtender - the business object attached to the machine
 type Document struct {
-	ID       string `json:"id"`
-	Title    string `json:"title"`
-	Author   string `json:"author"`
-	Reviewer string `json:"reviewer,omitempty"`
+	ID       string          `json:"id"`
+	Title    string          `json:"title"`
+	Author   string          `json:"author"`
+	Reviewer string          `json:"reviewer,omitempty"`
+	FSMState *gonfa.Storable `json:"fsmState,omitempty"`
 }
 
 // LogAction logs workflow events
@@ -36,10 +38,16 @@ type LogAction struct {
 	message string
 }
 
-func (l *LogAction) Execute(ctx context.Context, payload gonfa.Payload) error {
-	doc, ok := payload.(*Document)
+func (l *LogAction) Execute(
+	ctx context.Context,
+	state gonfa.MachineState,
+	payload gonfa.Payload,
+) error {
+	// Get the business object from StateExtender
+	doc, ok := state.StateExtender().(*Document)
 	if !ok {
-		return fmt.Errorf("expected *Document, got %T", payload)
+		return fmt.Errorf("expected *Document, got %T",
+			state.StateExtender())
 	}
 	fmt.Printf("[LOG] %s - Document: %s (ID: %s)\n",
 		l.message, doc.Title, doc.ID)
@@ -51,11 +59,14 @@ type AssignReviewerAction struct{}
 
 func (a *AssignReviewerAction) Execute(
 	ctx context.Context,
+	state gonfa.MachineState,
 	payload gonfa.Payload,
 ) error {
-	doc, ok := payload.(*Document)
+	// Get the business object from StateExtender
+	doc, ok := state.StateExtender().(*Document)
 	if !ok {
-		return fmt.Errorf("expected *Document, got %T", payload)
+		return fmt.Errorf("expected *Document, got %T",
+			state.StateExtender())
 	}
 	doc.Reviewer = "John Doe" // In real app, would use proper logic
 	fmt.Printf("[ACTION] Assigned reviewer '%s' to document '%s'\n",
@@ -68,11 +79,14 @@ type NotifyAuthorAction struct{}
 
 func (n *NotifyAuthorAction) Execute(
 	ctx context.Context,
+	state gonfa.MachineState,
 	payload gonfa.Payload,
 ) error {
-	doc, ok := payload.(*Document)
+	// Get the business object from StateExtender
+	doc, ok := state.StateExtender().(*Document)
 	if !ok {
-		return fmt.Errorf("expected *Document, got %T", payload)
+		return fmt.Errorf("expected *Document, got %T",
+			state.StateExtender())
 	}
 	fmt.Printf("[NOTIFY] Notified author '%s' about document '%s'\n",
 		doc.Author, doc.Title)
@@ -86,6 +100,7 @@ type IsManagerGuard struct {
 
 func (g *IsManagerGuard) Check(
 	ctx context.Context,
+	state gonfa.MachineState,
 	payload gonfa.Payload,
 ) bool {
 	// In real app, would check user permissions from context
@@ -100,6 +115,7 @@ func main() {
 	// Create the state machine definition using Builder
 	definition, err := builder.New().
 		InitialState(gonfa.State("Draft")).
+		FinalStates("Approved", "Archived").
 		// Define state actions
 		OnEntry(gonfa.State("InReview"), &AssignReviewerAction{}).
 		OnExit(gonfa.State("InReview"), &LogAction{
@@ -141,14 +157,17 @@ func main() {
 		log.Fatalf("Failed to build definition: %v", err)
 	}
 
-	// Create a machine instance
-	sm := machine.New(definition)
-
-	// Create a document
+	// Create a document (this will be our StateExtender)
 	doc := &Document{
 		ID:     "DOC-001",
 		Title:  "Project Proposal",
 		Author: "Alice Smith",
+	}
+
+	// Create a machine instance with the document as StateExtender
+	sm, err := machine.New(definition, doc)
+	if err != nil {
+		log.Fatalf("Failed to create machine: %v", err)
 	}
 
 	ctx := context.Background()
@@ -157,7 +176,7 @@ func main() {
 
 	// Submit document for review
 	fmt.Println("1. Submitting document for review...")
-	success, err := sm.Fire(ctx, gonfa.Event("Submit"), doc)
+	success, err := sm.Fire(ctx, gonfa.Event("Submit"), nil)
 	if err != nil {
 		log.Printf("Error during Submit: %v", err)
 	}
@@ -166,41 +185,50 @@ func main() {
 
 	// Try to approve (should succeed as manager)
 	fmt.Println("2. Approving document as manager...")
-	success, err = sm.Fire(ctx, gonfa.Event("Approve"), doc)
+	success, err = sm.Fire(ctx, gonfa.Event("Approve"), nil)
 	if err != nil {
 		log.Printf("Error during Approve: %v", err)
 	}
 	fmt.Printf("Approve success: %v, Current state: %s\n\n",
 		success, sm.CurrentState())
 
+	// Check if in final state
+	fmt.Printf("3. Is document in final state? %v\n\n",
+		sm.IsInFinalState())
+
 	// Demonstrate serialization
-	fmt.Println("3. Serializing machine state...")
+	fmt.Println("4. Serializing machine state...")
 	storable, err := sm.Marshal()
 	if err != nil {
 		log.Fatalf("Failed to marshal machine state: %v", err)
 	}
 
-	jsonData, err := json.MarshalIndent(storable, "", "  ")
+	// Save FSM state to document
+	doc.FSMState = storable
+
+	jsonData, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		log.Fatalf("Failed to marshal to JSON: %v", err)
 	}
 
-	fmt.Printf("Serialized state:\n%s\n\n", jsonData)
+	fmt.Printf("Serialized document with FSM state:\n%s\n\n", jsonData)
 
 	// Demonstrate restoration
-	fmt.Println("4. Restoring machine from serialized state...")
-	var restoredStorable gonfa.Storable
-	err = json.Unmarshal(jsonData, &restoredStorable)
+	fmt.Println("5. Restoring machine from serialized state...")
+	var restoredDoc Document
+	err = json.Unmarshal(jsonData, &restoredDoc)
 	if err != nil {
 		log.Fatalf("Failed to unmarshal JSON: %v", err)
 	}
 
-	restoredMachine, err := machine.Restore(definition, &restoredStorable)
+	restoredMachine, err := machine.Restore(definition, restoredDoc.FSMState, &restoredDoc)
 	if err != nil {
 		log.Fatalf("Failed to restore machine: %v", err)
 	}
 
 	fmt.Printf("Restored machine state: %s\n", restoredMachine.CurrentState())
+	fmt.Printf("Restored document: %s (ID: %s)\n",
+		restoredDoc.Title, restoredDoc.ID)
 
 	// Show history
 	history := restoredMachine.History()
