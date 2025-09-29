@@ -16,9 +16,11 @@ func TestNewDefinition(t *testing.T) {
 		states := map[gonfa.State]StateConfig{
 			"Start": {OnEntry: []gonfa.Action{&testAction{name: "startEntry"}}},
 			"End1":  {OnExit: []gonfa.Action{&testAction{name: "end1Exit"}}},
+			"End2":  {},
 		}
 		transitions := []Transition{
 			{From: "Start", To: "End1", On: "Event1"},
+			{From: "Start", To: "End2", On: "Event2"},
 		}
 		hooks := Hooks{
 			OnSuccess: []gonfa.Action{&testAction{name: "success"}},
@@ -39,30 +41,78 @@ func TestNewDefinition(t *testing.T) {
 		assert.Contains(t, err.Error(), "initial state cannot be empty")
 	})
 
-	t.Run("initial state not found in states or transitions", func(t *testing.T) {
+	t.Run("initial state not found in states", func(t *testing.T) {
 		_, err := New("NonExistent", nil, nil, nil, Hooks{})
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "initial state 'NonExistent' not found")
+		assert.Contains(t, err.Error(), "states check failed")
+		assert.Contains(t, err.Error(), "initial state 'NonExistent' doesn't exist in states")
 	})
 
-	t.Run("initial state found in transitions", func(t *testing.T) {
+	t.Run("valid transitions with proper states", func(t *testing.T) {
+		states := map[gonfa.State]StateConfig{
+			"Start": {},
+			"End":   {},
+		}
+		finalStates := []gonfa.State{"End"}
 		transitions := []Transition{
 			{From: "Start", To: "End", On: "Event1"},
 		}
 
-		def, err := New("Start", nil, nil, transitions, Hooks{})
+		def, err := New("Start", finalStates, states, transitions, Hooks{})
 		require.NoError(t, err)
 		assert.Equal(t, gonfa.State("Start"), def.InitialState())
 	})
 
-	t.Run("initial state found in states", func(t *testing.T) {
+	t.Run("initial state with no outgoing transitions", func(t *testing.T) {
 		states := map[gonfa.State]StateConfig{
 			"Start": {},
 		}
 
-		def, err := New("Start", nil, states, nil, Hooks{})
-		require.NoError(t, err)
-		assert.Equal(t, gonfa.State("Start"), def.InitialState())
+		_, err := New("Start", nil, states, nil, Hooks{})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "states check failed")
+		assert.Contains(t, err.Error(), "no transitions start from initial state")
+	})
+
+	t.Run("invalid final state not in states", func(t *testing.T) {
+		states := map[gonfa.State]StateConfig{
+			"Start": {},
+		}
+		finalStates := []gonfa.State{"NonExistent"}
+
+		_, err := New("Start", finalStates, states, nil, Hooks{})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "states check failed")
+		assert.Contains(t, err.Error(), "final state 'NonExistent' doesn't exist in states")
+	})
+
+	t.Run("invalid transition source state", func(t *testing.T) {
+		states := map[gonfa.State]StateConfig{
+			"Start": {},
+			"End":   {},
+		}
+		transitions := []Transition{
+			{From: "NonExistent", To: "End", On: "Event1"},
+		}
+
+		_, err := New("Start", nil, states, transitions, Hooks{})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "states check failed")
+		assert.Contains(t, err.Error(), "state 'NonExistent' doesn't exist as transition source")
+	})
+
+	t.Run("invalid transition target state", func(t *testing.T) {
+		states := map[gonfa.State]StateConfig{
+			"Start": {},
+		}
+		transitions := []Transition{
+			{From: "Start", To: "NonExistent", On: "Event1"},
+		}
+
+		_, err := New("Start", nil, states, transitions, Hooks{})
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "states check failed")
+		assert.Contains(t, err.Error(), "state 'NonExistent' doesn't exist as transition target")
 	})
 }
 
@@ -89,9 +139,10 @@ func TestDefinitionGetters(t *testing.T) {
 	})
 
 	t.Run("FinalStates", func(t *testing.T) {
-		finalStatesMap := def.FinalStates()
-		assert.True(t, finalStatesMap["End"])
-		assert.False(t, finalStatesMap["Start"])
+		finalStatesList := def.FinalStates()
+		assert.Contains(t, finalStatesList, gonfa.State("End"))
+		assert.NotContains(t, finalStatesList, gonfa.State("Start"))
+		assert.Len(t, finalStatesList, 1)
 	})
 
 	t.Run("IsFinalState", func(t *testing.T) {
@@ -123,13 +174,19 @@ func TestDefinitionGetters(t *testing.T) {
 }
 
 func TestGetTransitions(t *testing.T) {
+	states := map[gonfa.State]StateConfig{
+		"Start":  {},
+		"Middle": {},
+		"End":    {},
+	}
+	finalStates := []gonfa.State{"End"}
 	transitions := []Transition{
 		{From: "Start", To: "Middle", On: "Event1"},
 		{From: "Start", To: "End", On: "Event1"},
 		{From: "Middle", To: "End", On: "Event2"},
 	}
 
-	def, err := New("Start", nil, nil, transitions, Hooks{})
+	def, err := New("Start", finalStates, states, transitions, Hooks{})
 	require.NoError(t, err)
 
 	t.Run("multiple transitions for same state and event", func(t *testing.T) {
@@ -157,9 +214,14 @@ func TestGetStateConfig(t *testing.T) {
 			OnEntry: []gonfa.Action{&testAction{name: "startEntry"}},
 			OnExit:  []gonfa.Action{&testAction{name: "startExit"}},
 		},
+		"End": {},
+	}
+	finalStates := []gonfa.State{"End"}
+	transitions := []Transition{
+		{From: "Start", To: "End", On: "Finish"},
 	}
 
-	def, err := New("Start", nil, states, nil, Hooks{})
+	def, err := New("Start", finalStates, states, transitions, Hooks{})
 	require.NoError(t, err)
 
 	t.Run("existing state", func(t *testing.T) {

@@ -38,9 +38,13 @@ states:
       - action1
     onExit:
       - action2
+  Middle:
+    onEntry:
+      - action1
   End1:
     onEntry:
       - action1
+  End2: {}
 transitions:
   - from: Start
     to: Middle
@@ -56,6 +60,9 @@ transitions:
       - guard2
     actions:
       - action2
+  - from: Middle
+    to: End2
+    on: Event3
 `
 
 		reg := createTestRegistry()
@@ -231,6 +238,11 @@ transitions:
 func TestLoadDefinitionWithHooks(t *testing.T) {
 	yamlData := `
 initialState: Start
+finalStates:
+  - End
+states:
+  Start: {}
+  End: {}
 hooks:
   onSuccess:
     - action1
@@ -256,6 +268,12 @@ transitions:
 func TestLoadDefinitionWithTransitions(t *testing.T) {
 	yamlData := `
 initialState: Start
+finalStates:
+  - End
+states:
+  Start: {}
+  Middle: {}
+  End: {}
 transitions:
   - from: Start
     to: Middle
