@@ -15,6 +15,7 @@ import (
 func TestConcurrentAccess(t *testing.T) {
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		AddTransition("Start", "Middle", "ToMiddle").
 		AddTransition("Middle", "End", "ToEnd").
 		Build()
@@ -107,6 +108,7 @@ func TestConcurrentMarshal(t *testing.T) {
 func TestConcurrentFire(t *testing.T) {
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		AddTransition("Start", "Middle", "ToMiddle").
 		AddTransition("Middle", "End", "ToEnd").
 		Build()

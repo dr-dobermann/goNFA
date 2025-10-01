@@ -14,6 +14,7 @@ package definition
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/dr-dobermann/gonfa/pkg/gonfa"
 )
@@ -43,7 +44,7 @@ type Hooks struct {
 // It contains all states, transitions, and associated actions/guards.
 type Definition struct {
 	initialState gonfa.State
-	finalStates  map[gonfa.State]bool // Set of final (accepting) states
+	finalStates  []gonfa.State
 	states       map[gonfa.State]StateConfig
 	transitions  []Transition
 	hooks        Hooks
@@ -61,28 +62,25 @@ func New(
 		return nil, fmt.Errorf("initial state cannot be empty")
 	}
 
-	// Validate that initial state exists in states or transitions
-	_, stateExists := states[initialState]
-
-	if !stateExists {
-		for _, t := range transitions {
-			if t.From == initialState || t.To == initialState {
-				stateExists = true
-				break
-			}
-		}
+	ss := make([]gonfa.State, len(states))
+	i := 0
+	for s := range states {
+		ss[i] = s
+		i = i + 1
 	}
 
-	if !stateExists {
-		return nil, fmt.Errorf(
-			"initial state '%s' not found in states or transitions",
-			initialState)
+	if err := checkStates(
+		initialState,
+		ss,
+		transitions,
+		finalStates); err != nil {
+		return nil, fmt.Errorf("states check failed: %w", err)
 	}
 
 	// Create final states map
-	finalStatesMap := make(map[gonfa.State]bool, len(finalStates))
-	for _, state := range finalStates {
-		finalStatesMap[state] = true
+	finalStatesCopy := make([]gonfa.State, len(finalStates))
+	if n := copy(finalStatesCopy, finalStates); n != len(finalStates) {
+		panic("failed to create copy of final states list")
 	}
 
 	// Copy states map to ensure immutability
@@ -97,7 +95,7 @@ func New(
 
 	return &Definition{
 		initialState: initialState,
-		finalStates:  finalStatesMap,
+		finalStates:  finalStatesCopy,
 		states:       statesCopy,
 		transitions:  transitionsCopy,
 		hooks:        hooks,
@@ -110,17 +108,18 @@ func (d *Definition) InitialState() gonfa.State {
 }
 
 // FinalStates returns a copy of the final states set.
-func (d *Definition) FinalStates() map[gonfa.State]bool {
-	finalStates := make(map[gonfa.State]bool, len(d.finalStates))
-	for k, v := range d.finalStates {
-		finalStates[k] = v
+func (d *Definition) FinalStates() []gonfa.State {
+	finalStates := make([]gonfa.State, len(d.finalStates))
+	if n := copy(finalStates, d.finalStates); n != len(d.finalStates) {
+		panic("failed to copy final states")
 	}
+
 	return finalStates
 }
 
 // IsFinalState checks if the given state is a final state.
 func (d *Definition) IsFinalState(state gonfa.State) bool {
-	return d.finalStates[state]
+	return slices.Contains(d.finalStates, state)
 }
 
 // States returns a copy of the states configuration.
@@ -129,13 +128,17 @@ func (d *Definition) States() map[gonfa.State]StateConfig {
 	for k, v := range d.states {
 		states[k] = v
 	}
+
 	return states
 }
 
 // Transitions returns a copy of all transitions.
 func (d *Definition) Transitions() []Transition {
 	transitions := make([]Transition, len(d.transitions))
-	copy(transitions, d.transitions)
+	if n := copy(transitions, d.transitions); n != len(d.transitions) {
+		panic("failed to copy transitions list")
+	}
+
 	return transitions
 }
 
@@ -156,6 +159,7 @@ func (d *Definition) GetTransitions(
 			result = append(result, t)
 		}
 	}
+
 	return result
 }
 
@@ -166,5 +170,6 @@ func (d *Definition) GetStateConfig(state gonfa.State) StateConfig {
 	if !exists {
 		return StateConfig{}
 	}
+
 	return config
 }

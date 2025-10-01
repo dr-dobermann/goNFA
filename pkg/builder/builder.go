@@ -133,13 +133,40 @@ func (b *Builder) Build() (*definition.Definition, error) {
 		return nil, fmt.Errorf("at least one transition must be defined")
 	}
 
-	// Validate that WithGuards/WithActions were called appropriately
-	// This is automatically handled by the lastTransition pointer
+	// Ensure all states referenced in transitions are in the states map
+	allStates := make(map[gonfa.State]definition.StateConfig)
+
+	// Start with existing state configurations
+	for state, config := range b.states {
+		allStates[state] = config
+	}
+
+	// Add initial state if not already present
+	if _, exists := allStates[b.initialState]; !exists {
+		allStates[b.initialState] = definition.StateConfig{}
+	}
+
+	// Add all states referenced in transitions
+	for _, t := range b.transitions {
+		if _, exists := allStates[t.From]; !exists {
+			allStates[t.From] = definition.StateConfig{}
+		}
+		if _, exists := allStates[t.To]; !exists {
+			allStates[t.To] = definition.StateConfig{}
+		}
+	}
+
+	// Add final states if not already present
+	for _, state := range b.finalStates {
+		if _, exists := allStates[state]; !exists {
+			allStates[state] = definition.StateConfig{}
+		}
+	}
 
 	return definition.New(
 		b.initialState,
 		b.finalStates,
-		b.states,
+		allStates,
 		b.transitions,
 		b.hooks,
 	)

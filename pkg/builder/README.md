@@ -17,6 +17,7 @@ The Builder pattern implementation enables:
 ```go
 definition, err := builder.New().
     InitialState("Draft").
+    FinalStates("Approved").
     AddTransition("Draft", "InReview", "Submit").
     AddTransition("InReview", "Approved", "Approve").
     Build()
@@ -30,6 +31,7 @@ action := &NotifyAction{}
 
 definition, err := builder.New().
     InitialState("Draft").
+    FinalStates("Approved").
     OnEntry("InReview", &AssignReviewerAction{}).
     OnExit("InReview", &CleanupAction{}).
     AddTransition("Draft", "InReview", "Submit").

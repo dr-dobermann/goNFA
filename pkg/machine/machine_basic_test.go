@@ -16,6 +16,7 @@ import (
 func createTestDefinition(t *testing.T) *definition.Definition {
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		OnEntry("Middle", &testAction{name: "middleEntry"}).
 		OnEntry("End", &testAction{name: "endEntry"}).
 		AddTransition("Start", "Middle", "ToMiddle").
