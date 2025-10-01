@@ -35,13 +35,17 @@ Creates a new Machine instance from a Definition. The machine starts in the init
 ```go
 definition, err := builder.New().
     InitialState("Start").
+    FinalStates("End").
     AddTransition("Start", "End", "Finish").
     Build()
 if err != nil {
     log.Fatal(err)
 }
 
-machine := machine.NewMachine(definition)
+machine := machine.New(definition, nil)
+if err != nil {
+    log.Fatal(err)
+}
 fmt.Printf("Initial state: %s\n", machine.CurrentState()) // Output: Start
 ```
 
@@ -188,6 +192,7 @@ The machine supports non-deterministic finite automata behavior:
 // Multiple transitions with different guards
 definition, err := builder.New().
     InitialState("Start").
+    FinalStates("Path1", "Path2").
     AddTransition("Start", "Path1", "Event").
     WithGuards(&Guard1{}).
     AddTransition("Start", "Path2", "Event").
@@ -204,7 +209,10 @@ All Machine operations are thread-safe:
 
 ```go
 var wg sync.WaitGroup
-machine := machine.NewMachine(definition)
+machine, err := machine.New(definition, nil)
+if err != nil {
+    log.Fatal(err)
+}
 
 // Multiple goroutines can safely fire events
 for i := 0; i < 10; i++ {

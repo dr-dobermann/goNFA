@@ -48,6 +48,7 @@ func TestFireWithGuards(t *testing.T) {
 
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		AddTransition("Start", "End", "ToEnd").
 		WithGuards(guard).
 		WithActions(action).
@@ -71,6 +72,7 @@ func TestFireWithFailingGuard(t *testing.T) {
 
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		AddTransition("Start", "End", "ToEnd").
 		WithGuards(guard).
 		Build()
@@ -92,6 +94,7 @@ func TestFireWithFailingAction(t *testing.T) {
 
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		AddTransition("Start", "End", "ToEnd").
 		WithActions(action).
 		Build()
@@ -114,6 +117,7 @@ func TestFireWithStateActions(t *testing.T) {
 
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		OnEntry("End", entryAction).
 		OnExit("Start", exitAction).
 		AddTransition("Start", "End", "ToEnd").
@@ -138,6 +142,7 @@ func TestFireWithHooks(t *testing.T) {
 
 	def, err := builder.New().
 		InitialState("Start").
+		FinalStates("End").
 		WithSuccessHooks(successHook).
 		WithFailureHooks(failureHook).
 		AddTransition("Start", "End", "ToEnd").

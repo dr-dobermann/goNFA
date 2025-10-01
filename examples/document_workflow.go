@@ -115,7 +115,7 @@ func main() {
 	// Create the state machine definition using Builder
 	definition, err := builder.New().
 		InitialState(gonfa.State("Draft")).
-		FinalStates("Approved", "Archived").
+		FinalStates("Archived").
 		// Define state actions
 		OnEntry(gonfa.State("InReview"), &AssignReviewerAction{}).
 		OnExit(gonfa.State("InReview"), &LogAction{
@@ -147,6 +147,16 @@ func main() {
 			gonfa.State("Rejected"),
 			gonfa.State("InReview"),
 			gonfa.Event("Rework"),
+		).
+		AddTransition(
+			gonfa.State("Approved"),
+			gonfa.State("Archived"),
+			gonfa.Event("Archive"),
+		).
+		AddTransition(
+			gonfa.State("Rejected"),
+			gonfa.State("Archived"),
+			gonfa.Event("Archive"),
 		).
 		// Add global hooks
 		WithSuccessHooks(&LogAction{message: "Transition successful"}).
@@ -192,12 +202,21 @@ func main() {
 	fmt.Printf("Approve success: %v, Current state: %s\n\n",
 		success, sm.CurrentState())
 
+	// Archive the approved document
+	fmt.Println("3. Archiving approved document...")
+	success, err = sm.Fire(ctx, gonfa.Event("Archive"), nil)
+	if err != nil {
+		log.Printf("Error during Archive: %v", err)
+	}
+	fmt.Printf("Archive success: %v, Current state: %s\n\n",
+		success, sm.CurrentState())
+
 	// Check if in final state
-	fmt.Printf("3. Is document in final state? %v\n\n",
+	fmt.Printf("4. Is document in final state? %v\n\n",
 		sm.IsInFinalState())
 
 	// Demonstrate serialization
-	fmt.Println("4. Serializing machine state...")
+	fmt.Println("5. Serializing machine state...")
 	storable, err := sm.Marshal()
 	if err != nil {
 		log.Fatalf("Failed to marshal machine state: %v", err)
@@ -214,7 +233,7 @@ func main() {
 	fmt.Printf("Serialized document with FSM state:\n%s\n\n", jsonData)
 
 	// Demonstrate restoration
-	fmt.Println("5. Restoring machine from serialized state...")
+	fmt.Println("6. Restoring machine from serialized state...")
 	var restoredDoc Document
 	err = json.Unmarshal(jsonData, &restoredDoc)
 	if err != nil {

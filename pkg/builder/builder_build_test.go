@@ -69,6 +69,7 @@ func TestBuildWithStateActions(t *testing.T) {
 
 	def, err := New().
 		InitialState("Start").
+		FinalStates("End").
 		OnEntry("End", entryAction).
 		OnExit("Start", exitAction).
 		AddTransition("Start", "End", "ToEnd").
@@ -91,6 +92,7 @@ func TestBuildWithHooks(t *testing.T) {
 
 	def, err := New().
 		InitialState("Start").
+		FinalStates("End").
 		WithSuccessHooks(successAction).
 		WithFailureHooks(failureAction).
 		AddTransition("Start", "End", "ToEnd").

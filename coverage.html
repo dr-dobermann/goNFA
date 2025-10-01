@@ -55,29 +55,42 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">github.com/dr-dobermann/gonfa/pkg/builder/builder.go (100.0%)</option>
+				<option value="file0">github.com/dr-dobermann/gonfa/pkg/builder/builder.go (95.7%)</option>
 				
 				<option value="file1">github.com/dr-dobermann/gonfa/pkg/builder/test_helpers.go (0.0%)</option>
 				
-				<option value="file2">github.com/dr-dobermann/gonfa/pkg/definition/definition.go (0.0%)</option>
+				<option value="file2">github.com/dr-dobermann/gonfa/pkg/definition/check.go (100.0%)</option>
 				
-				<option value="file3">github.com/dr-dobermann/gonfa/pkg/definition/loader.go (0.0%)</option>
+				<option value="file3">github.com/dr-dobermann/gonfa/pkg/definition/definition.go (92.9%)</option>
 				
-				<option value="file4">github.com/dr-dobermann/gonfa/pkg/machine/machine.go (91.3%)</option>
+				<option value="file4">github.com/dr-dobermann/gonfa/pkg/definition/loader.go (94.3%)</option>
 				
-				<option value="file5">github.com/dr-dobermann/gonfa/pkg/machine/test_helpers.go (100.0%)</option>
+				<option value="file5">github.com/dr-dobermann/gonfa/pkg/definition/test_helpers.go (0.0%)</option>
 				
-				<option value="file6">github.com/dr-dobermann/gonfa/pkg/registry/registry.go (95.1%)</option>
+				<option value="file6">github.com/dr-dobermann/gonfa/pkg/machine/machine.go (91.3%)</option>
 				
-				<option value="file7">github.com/dr-dobermann/gonfa/pkg/registry/test_helpers.go (0.0%)</option>
+				<option value="file7">github.com/dr-dobermann/gonfa/pkg/machine/test_helpers.go (100.0%)</option>
+				
+				<option value="file8">github.com/dr-dobermann/gonfa/pkg/registry/registry.go (95.1%)</option>
+				
+				<option value="file9">github.com/dr-dobermann/gonfa/pkg/registry/test_helpers.go (0.0%)</option>
 				
 				</select>
 			</div>
 			<div id="legend">
 				<span>not tracked</span>
 			
-				<span class="cov0">not covered</span>
-				<span class="cov8">covered</span>
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
 			
 			</div>
 		</div>
@@ -115,28 +128,28 @@ type Builder struct {
 }
 
 // New creates a new Builder instance.
-func New() *Builder <span class="cov8" title="1">{
+func New() *Builder <span class="cov10" title="26">{
         return &amp;Builder{
                 states: make(map[gonfa.State]definition.StateConfig),
         }
 }</span>
 
 // InitialState sets the initial state for the state machine.
-func (b *Builder) InitialState(s gonfa.State) *Builder <span class="cov8" title="1">{
+func (b *Builder) InitialState(s gonfa.State) *Builder <span class="cov5" title="6">{
         b.initialState = s
         return b
 }</span>
 
 // FinalStates sets the final (accepting) states for the state machine.
 // Can be called multiple times to add more states.
-func (b *Builder) FinalStates(states ...gonfa.State) *Builder <span class="cov8" title="1">{
+func (b *Builder) FinalStates(states ...gonfa.State) *Builder <span class="cov6" title="7">{
         b.finalStates = append(b.finalStates, states...)
         return b
 }</span>
 
 // OnEntry defines actions to be executed upon EVERY entry into the
 // specified state.
-func (b *Builder) OnEntry(s gonfa.State, actions ...gonfa.Action) *Builder <span class="cov8" title="1">{
+func (b *Builder) OnEntry(s gonfa.State, actions ...gonfa.Action) *Builder <span class="cov5" title="5">{
         config := b.states[s]
         config.OnEntry = append(config.OnEntry, actions...)
         b.states[s] = config
@@ -145,7 +158,7 @@ func (b *Builder) OnEntry(s gonfa.State, actions ...gonfa.Action) *Builder <span
 
 // OnExit defines actions to be executed upon EVERY exit from the
 // specified state.
-func (b *Builder) OnExit(s gonfa.State, actions ...gonfa.Action) *Builder <span class="cov8" title="1">{
+func (b *Builder) OnExit(s gonfa.State, actions ...gonfa.Action) *Builder <span class="cov5" title="5">{
         config := b.states[s]
         config.OnExit = append(config.OnExit, actions...)
         b.states[s] = config
@@ -158,7 +171,7 @@ func (b *Builder) AddTransition(
         from gonfa.State,
         to gonfa.State,
         on gonfa.Event,
-) *Builder <span class="cov8" title="1">{
+) *Builder <span class="cov7" title="12">{
         transition := definition.Transition{
                 From: from,
                 To:   to,
@@ -172,59 +185,86 @@ func (b *Builder) AddTransition(
 
 // WithGuards adds guards to the LAST added transition.
 // Returns an error in Build() if called before AddTransition.
-func (b *Builder) WithGuards(guards ...gonfa.Guard) *Builder <span class="cov8" title="1">{
-        if b.lastTransition != nil </span><span class="cov8" title="1">{
+func (b *Builder) WithGuards(guards ...gonfa.Guard) *Builder <span class="cov4" title="4">{
+        if b.lastTransition != nil </span><span class="cov4" title="3">{
                 b.lastTransition.Guards = append(b.lastTransition.Guards, guards...)
         }</span>
-        <span class="cov8" title="1">return b</span>
+        <span class="cov4" title="4">return b</span>
 }
 
 // WithActions adds actions to the LAST added transition.
 // Returns an error in Build() if called before AddTransition.
-func (b *Builder) WithActions(actions ...gonfa.Action) *Builder <span class="cov8" title="1">{
-        if b.lastTransition != nil </span><span class="cov8" title="1">{
+func (b *Builder) WithActions(actions ...gonfa.Action) *Builder <span class="cov4" title="4">{
+        if b.lastTransition != nil </span><span class="cov4" title="3">{
                 b.lastTransition.Actions = append(b.lastTransition.Actions,
                         actions...)
         }</span>
-        <span class="cov8" title="1">return b</span>
+        <span class="cov4" title="4">return b</span>
 }
 
 // WithHooks sets global hooks for the state machine.
-func (b *Builder) WithHooks(hooks definition.Hooks) *Builder <span class="cov8" title="1">{
+func (b *Builder) WithHooks(hooks definition.Hooks) *Builder <span class="cov1" title="1">{
         b.hooks = hooks
         return b
 }</span>
 
 // WithSuccessHooks sets global success hooks for the state machine.
-func (b *Builder) WithSuccessHooks(actions ...gonfa.Action) *Builder <span class="cov8" title="1">{
+func (b *Builder) WithSuccessHooks(actions ...gonfa.Action) *Builder <span class="cov5" title="5">{
         b.hooks.OnSuccess = append(b.hooks.OnSuccess, actions...)
         return b
 }</span>
 
 // WithFailureHooks sets global failure hooks for the state machine.
-func (b *Builder) WithFailureHooks(actions ...gonfa.Action) *Builder <span class="cov8" title="1">{
+func (b *Builder) WithFailureHooks(actions ...gonfa.Action) *Builder <span class="cov4" title="3">{
         b.hooks.OnFailure = append(b.hooks.OnFailure, actions...)
         return b
 }</span>
 
 // Build finalizes the building process and returns an immutable Definition.
 // Returns an error if the configuration is invalid.
-func (b *Builder) Build() (*definition.Definition, error) <span class="cov8" title="1">{
-        if b.initialState == "" </span><span class="cov8" title="1">{
+func (b *Builder) Build() (*definition.Definition, error) <span class="cov5" title="6">{
+        if b.initialState == "" </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("initial state must be set")
         }</span>
 
-        <span class="cov8" title="1">if len(b.transitions) == 0 </span><span class="cov8" title="1">{
+        <span class="cov5" title="5">if len(b.transitions) == 0 </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("at least one transition must be defined")
         }</span>
 
-        // Validate that WithGuards/WithActions were called appropriately
-        // This is automatically handled by the lastTransition pointer
+        // Ensure all states referenced in transitions are in the states map
+        <span class="cov4" title="4">allStates := make(map[gonfa.State]definition.StateConfig)
+        
+        // Start with existing state configurations
+        for state, config := range b.states </span><span class="cov4" title="3">{
+                allStates[state] = config
+        }</span>
 
-        <span class="cov8" title="1">return definition.New(
+        // Add initial state if not already present
+        <span class="cov4" title="4">if _, exists := allStates[b.initialState]; !exists </span><span class="cov2" title="2">{
+                allStates[b.initialState] = definition.StateConfig{}
+        }</span>
+
+        // Add all states referenced in transitions
+        <span class="cov4" title="4">for _, t := range b.transitions </span><span class="cov5" title="5">{
+                if _, exists := allStates[t.From]; !exists </span><span class="cov0" title="0">{
+                        allStates[t.From] = definition.StateConfig{}
+                }</span>
+                <span class="cov5" title="5">if _, exists := allStates[t.To]; !exists </span><span class="cov4" title="4">{
+                        allStates[t.To] = definition.StateConfig{}
+                }</span>
+        }
+
+        // Add final states if not already present
+        <span class="cov4" title="4">for _, state := range b.finalStates </span><span class="cov5" title="5">{
+                if _, exists := allStates[state]; !exists </span><span class="cov0" title="0">{
+                        allStates[state] = definition.StateConfig{}
+                }</span>
+        }
+
+        <span class="cov4" title="4">return definition.New(
                 b.initialState,
                 b.finalStates,
-                b.states,
+                allStates,
                 b.transitions,
                 b.hooks,
         )</span>
@@ -267,7 +307,310 @@ func (a *testAction) Execute(
 }</span>
 </pre>
 		
-		<pre class="file" id="file2" style="display: none">// Package definition provides structures and functions for creating
+		<pre class="file" id="file2" style="display: none">package definition
+
+import (
+        "fmt"
+
+        "github.com/dr-dobermann/gonfa/pkg/gonfa"
+)
+
+// stateSet represents a set of states for fast lookups
+type stateSet map[gonfa.State]struct{}
+
+// newStateSet creates a new state set from a slice of states
+func newStateSet(states []gonfa.State) stateSet <span class="cov8" title="89">{
+        set := make(stateSet, len(states))
+        for _, state := range states </span><span class="cov9" title="141">{
+                set[state] = struct{}{}
+        }</span>
+        <span class="cov8" title="89">return set</span>
+}
+
+// contains checks if state exists in the set
+func (s stateSet) contains(state gonfa.State) bool <span class="cov10" title="232">{
+        _, exists := s[state]
+        return exists
+}</span>
+
+// transitionGraph represents state transition graph
+type transitionGraph map[gonfa.State]stateSet
+
+// transitionKey uniquely identifies a transition
+type transitionKey struct {
+        from gonfa.State
+        to   gonfa.State
+        on   gonfa.Event
+}
+
+// newTransitionGraph builds transition graph from transitions slice
+// and validates for duplicate transitions
+func newTransitionGraph(transitions []Transition) (transitionGraph, error) <span class="cov6" title="25">{
+        graph := make(transitionGraph)
+        seen := make(map[transitionKey]struct{})
+
+        for _, t := range transitions </span><span class="cov7" title="41">{
+                key := transitionKey{from: t.From, to: t.To, on: t.On}
+
+                // Check for exact duplicate transition (From, To, Event)
+                if _, exists := seen[key]; exists </span><span class="cov2" title="2">{
+                        return nil, fmt.Errorf(
+                                "duplicate transition from '%s' to '%s' on event '%s'",
+                                t.From, t.To, t.On)
+                }</span>
+                <span class="cov7" title="39">seen[key] = struct{}{}
+
+                // Build graph for connectivity analysis
+                if graph[t.From] == nil </span><span class="cov6" title="31">{
+                        graph[t.From] = make(stateSet)
+                }</span>
+                <span class="cov7" title="39">graph[t.From][t.To] = struct{}{}</span>
+        }
+
+        <span class="cov6" title="23">return graph, nil</span>
+}
+
+// stateCounter tracks incoming and outgoing transition counts
+type stateCounter struct {
+        incoming int
+        outgoing int
+}
+
+// checkStates performs optimized integrity check
+func checkStates(
+        initialState gonfa.State,
+        states []gonfa.State,
+        transitions []Transition,
+        finalStates []gonfa.State,
+) error <span class="cov6" title="25">{
+        stateSet := newStateSet(states)
+        finalSet := newStateSet(finalStates)
+
+        if err := validateInitialState(initialState, stateSet); err != nil </span><span class="cov2" title="2">{
+                return err
+        }</span>
+
+        <span class="cov6" title="23">if err := validateFinalStates(finalSet, stateSet); err != nil </span><span class="cov2" title="2">{
+                return err
+        }</span>
+
+        <span class="cov6" title="21">graph, err := newTransitionGraph(transitions)
+        if err != nil </span><span class="cov1" title="1">{
+                return err
+        }</span>
+
+        <span class="cov5" title="20">if err := validateTransitionStates(graph, stateSet); err != nil </span><span class="cov3" title="4">{
+                return err
+        }</span>
+
+        <span class="cov5" title="16">return analyzeGraphStructure(initialState, finalSet, stateSet, graph)</span>
+}
+
+// validateInitialState checks if initial state exists
+func validateInitialState(
+        initialState gonfa.State,
+        stateSet stateSet,
+) error <span class="cov6" title="27">{
+        if !stateSet.contains(initialState) </span><span class="cov2" title="3">{
+                return fmt.Errorf(
+                        "initial state '%s' doesn't exist in states",
+                        initialState)
+        }</span>
+        <span class="cov6" title="24">return nil</span>
+}
+
+// validateFinalStates checks if all final states exist
+func validateFinalStates(finalSet, stateSet stateSet) error <span class="cov6" title="26">{
+        for state := range finalSet </span><span class="cov6" title="26">{
+                if !stateSet.contains(state) </span><span class="cov2" title="3">{
+                        return fmt.Errorf(
+                                "final state '%s' doesn't exist in states",
+                                state)
+                }</span>
+        }
+        <span class="cov6" title="23">return nil</span>
+}
+
+// validateTransitionStates checks if transition states exist
+func validateTransitionStates(
+        graph transitionGraph,
+        stateSet stateSet,
+) error <span class="cov5" title="20">{
+        for fromState, toStates := range graph </span><span class="cov6" title="26">{
+                if !stateSet.contains(fromState) </span><span class="cov2" title="2">{
+                        return fmt.Errorf(
+                                "state '%s' doesn't exist as transition source",
+                                fromState)
+                }</span>
+
+                <span class="cov6" title="24">for toState := range toStates </span><span class="cov6" title="30">{
+                        if !stateSet.contains(toState) </span><span class="cov2" title="2">{
+                                return fmt.Errorf(
+                                        "state '%s' doesn't exist as transition target",
+                                        toState)
+                        }</span>
+                }
+        }
+        <span class="cov5" title="16">return nil</span>
+}
+
+// analyzeGraphStructure performs graph connectivity and reachability checks
+func analyzeGraphStructure(
+        initialState gonfa.State,
+        finalSet stateSet,
+        stateSet stateSet,
+        graph transitionGraph,
+) error <span class="cov5" title="16">{
+        counters := buildStateCounters(stateSet, graph)
+        reachable := findReachableStates(initialState, graph)
+
+        if err := validateInitialStateUsage(initialState, graph); err != nil </span><span class="cov2" title="2">{
+                return err
+        }</span>
+
+        <span class="cov5" title="14">if err := validateStateConnectivity(
+                counters,
+                initialState,
+                finalSet,
+        ); err != nil </span><span class="cov1" title="1">{
+                return err
+        }</span>
+
+        <span class="cov5" title="13">return validateFinalStateReachability(finalSet, reachable)</span>
+}
+
+// buildStateCounters creates transition counters for all states
+func buildStateCounters(
+        stateSet stateSet,
+        graph transitionGraph,
+) map[gonfa.State]*stateCounter <span class="cov5" title="18">{
+        counters := make(map[gonfa.State]*stateCounter, len(stateSet))
+
+        // Initialize counters for all states
+        for state := range stateSet </span><span class="cov7" title="47">{
+                counters[state] = &amp;stateCounter{}
+        }</span>
+
+        // Count transitions
+        <span class="cov5" title="18">for fromState, toStates := range graph </span><span class="cov6" title="25">{
+                if counter := counters[fromState]; counter != nil </span><span class="cov6" title="25">{
+                        counter.outgoing = len(toStates)
+                }</span>
+
+                <span class="cov6" title="25">for toState := range toStates </span><span class="cov6" title="32">{
+                        if counter := counters[toState]; counter != nil </span><span class="cov6" title="32">{
+                                counter.incoming++
+                        }</span>
+                }
+        }
+
+        <span class="cov5" title="18">return counters</span>
+}
+
+// findReachableStates performs BFS to find all reachable states
+func findReachableStates(
+        initialState gonfa.State,
+        graph transitionGraph,
+) stateSet <span class="cov5" title="20">{
+        reachable := make(stateSet)
+        queue := []gonfa.State{initialState}
+        reachable[initialState] = struct{}{}
+
+        for len(queue) &gt; 0 </span><span class="cov7" title="52">{
+                current := queue[0]
+                queue = queue[1:]
+
+                for nextState := range graph[current] </span><span class="cov6" title="37">{
+                        if !reachable.contains(nextState) </span><span class="cov6" title="32">{
+                                reachable[nextState] = struct{}{}
+                                queue = append(queue, nextState)
+                        }</span>
+                }
+        }
+
+        <span class="cov5" title="20">return reachable</span>
+}
+
+// validateInitialStateUsage checks if initial state has transitions
+func validateInitialStateUsage(
+        initialState gonfa.State,
+        graph transitionGraph,
+) error <span class="cov5" title="18">{
+        if _, exists := graph[initialState]; !exists </span><span class="cov2" title="3">{
+                return fmt.Errorf(
+                        "no transitions start from initial state '%s'",
+                        initialState)
+        }</span>
+        <span class="cov5" title="15">return nil</span>
+}
+
+// validateStateConnectivity checks for hanging and dead-end states
+func validateStateConnectivity(
+        counters map[gonfa.State]*stateCounter,
+        initialState gonfa.State,
+        finalSet stateSet,
+) error <span class="cov5" title="14">{
+        for state, counter := range counters </span><span class="cov6" title="37">{
+                if err := validateSingleState(
+                        state,
+                        counter,
+                        initialState,
+                        finalSet,
+                ); err != nil </span><span class="cov1" title="1">{
+                        return err
+                }</span>
+        }
+        <span class="cov5" title="13">return nil</span>
+}
+
+// validateSingleState checks connectivity rules for a single state
+func validateSingleState(
+        state gonfa.State,
+        counter *stateCounter,
+        initialState gonfa.State,
+        finalSet stateSet,
+) error <span class="cov7" title="43">{
+        isFinal := finalSet.contains(state)
+
+        // Check for hanging states
+        if counter.incoming == 0 &amp;&amp; state != initialState </span><span class="cov2" title="2">{
+                return fmt.Errorf(
+                        "state '%s' isn't an initial state but has no incoming transitions",
+                        state)
+        }</span>
+
+        // Check for dead-end non-final states
+        <span class="cov7" title="41">if counter.outgoing == 0 &amp;&amp; !isFinal </span><span class="cov1" title="1">{
+                return fmt.Errorf("state '%s' is a dead-end state", state)
+        }</span>
+
+        // Check for final states with outgoing transitions
+        <span class="cov7" title="40">if isFinal &amp;&amp; counter.outgoing &gt; 0 </span><span class="cov1" title="1">{
+                return fmt.Errorf(
+                        "final state '%s' has outgoing transition(s)",
+                        state)
+        }</span>
+
+        <span class="cov7" title="39">return nil</span>
+}
+
+// validateFinalStateReachability checks if all final states are reachable
+func validateFinalStateReachability(
+        finalSet stateSet,
+        reachable stateSet,
+) error <span class="cov5" title="16">{
+        for state := range finalSet </span><span class="cov5" title="20">{
+                if !reachable.contains(state) </span><span class="cov1" title="1">{
+                        return fmt.Errorf(
+                                "final state '%s' is not reachable from initial state",
+                                state)
+                }</span>
+        }
+        <span class="cov5" title="15">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">// Package definition provides structures and functions for creating
 // immutable state machine definitions. A Definition describes the static
 // structure of a state machine including states, transitions, and hooks.
 //
@@ -283,6 +626,7 @@ package definition
 
 import (
         "fmt"
+        "slices"
 
         "github.com/dr-dobermann/gonfa/pkg/gonfa"
 )
@@ -312,7 +656,7 @@ type Hooks struct {
 // It contains all states, transitions, and associated actions/guards.
 type Definition struct {
         initialState gonfa.State
-        finalStates  map[gonfa.State]bool // Set of final (accepting) states
+        finalStates  []gonfa.State
         states       map[gonfa.State]StateConfig
         transitions  []Transition
         hooks        Hooks
@@ -325,48 +669,45 @@ func New(
         states map[gonfa.State]StateConfig,
         transitions []Transition,
         hooks Hooks,
-) (*Definition, error) <span class="cov0" title="0">{
-        if initialState == "" </span><span class="cov0" title="0">{
+) (*Definition, error) <span class="cov8" title="15">{
+        if initialState == "" </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("initial state cannot be empty")
         }</span>
 
-        // Validate that initial state exists in states or transitions
-        <span class="cov0" title="0">_, stateExists := states[initialState]
+        <span class="cov8" title="14">ss := make([]gonfa.State, len(states))
+        i := 0
+        for s := range states </span><span class="cov10" title="28">{
+                ss[i] = s
+                i = i + 1
+        }</span>
 
-        if !stateExists </span><span class="cov0" title="0">{
-                for _, t := range transitions </span><span class="cov0" title="0">{
-                        if t.From == initialState || t.To == initialState </span><span class="cov0" title="0">{
-                                stateExists = true
-                                break</span>
-                        }
-                }
-        }
-
-        <span class="cov0" title="0">if !stateExists </span><span class="cov0" title="0">{
-                return nil, fmt.Errorf(
-                        "initial state '%s' not found in states or transitions",
-                        initialState)
+        <span class="cov8" title="14">if err := checkStates(
+                initialState,
+                ss,
+                transitions,
+                finalStates); err != nil </span><span class="cov5" title="5">{
+                return nil, fmt.Errorf("states check failed: %w", err)
         }</span>
 
         // Create final states map
-        <span class="cov0" title="0">finalStatesMap := make(map[gonfa.State]bool, len(finalStates))
-        for _, state := range finalStates </span><span class="cov0" title="0">{
-                finalStatesMap[state] = true
-        }</span>
+        <span class="cov6" title="9">finalStatesCopy := make([]gonfa.State, len(finalStates))
+        if n := copy(finalStatesCopy, finalStates); n != len(finalStates) </span><span class="cov0" title="0">{
+                panic("failed to create copy of final states list")</span>
+        }
 
         // Copy states map to ensure immutability
-        <span class="cov0" title="0">statesCopy := make(map[gonfa.State]StateConfig, len(states))
-        for k, v := range states </span><span class="cov0" title="0">{
+        <span class="cov6" title="9">statesCopy := make(map[gonfa.State]StateConfig, len(states))
+        for k, v := range states </span><span class="cov9" title="23">{
                 statesCopy[k] = v
         }</span>
 
         // Copy transitions slice
-        <span class="cov0" title="0">transitionsCopy := make([]Transition, len(transitions))
+        <span class="cov6" title="9">transitionsCopy := make([]Transition, len(transitions))
         copy(transitionsCopy, transitions)
 
         return &amp;Definition{
                 initialState: initialState,
-                finalStates:  finalStatesMap,
+                finalStates:  finalStatesCopy,
                 states:       statesCopy,
                 transitions:  transitionsCopy,
                 hooks:        hooks,
@@ -374,42 +715,47 @@ func New(
 }
 
 // InitialState returns the initial state of the machine.
-func (d *Definition) InitialState() gonfa.State <span class="cov0" title="0">{
+func (d *Definition) InitialState() gonfa.State <span class="cov4" title="4">{
         return d.initialState
 }</span>
 
 // FinalStates returns a copy of the final states set.
-func (d *Definition) FinalStates() map[gonfa.State]bool <span class="cov0" title="0">{
-        finalStates := make(map[gonfa.State]bool, len(d.finalStates))
-        for k, v := range d.finalStates </span><span class="cov0" title="0">{
-                finalStates[k] = v
-        }</span>
-        <span class="cov0" title="0">return finalStates</span>
+func (d *Definition) FinalStates() []gonfa.State <span class="cov1" title="1">{
+        finalStates := make([]gonfa.State, len(d.finalStates))
+        if n := copy(finalStates, d.finalStates); n != len(d.finalStates) </span><span class="cov0" title="0">{
+                panic("failed to copy final states")</span>
+        }
+
+        <span class="cov1" title="1">return finalStates</span>
 }
 
 // IsFinalState checks if the given state is a final state.
-func (d *Definition) IsFinalState(state gonfa.State) bool <span class="cov0" title="0">{
-        return d.finalStates[state]
+func (d *Definition) IsFinalState(state gonfa.State) bool <span class="cov6" title="9">{
+        return slices.Contains(d.finalStates, state)
 }</span>
 
 // States returns a copy of the states configuration.
-func (d *Definition) States() map[gonfa.State]StateConfig <span class="cov0" title="0">{
+func (d *Definition) States() map[gonfa.State]StateConfig <span class="cov2" title="2">{
         states := make(map[gonfa.State]StateConfig, len(d.states))
-        for k, v := range d.states </span><span class="cov0" title="0">{
+        for k, v := range d.states </span><span class="cov4" title="4">{
                 states[k] = v
         }</span>
-        <span class="cov0" title="0">return states</span>
+
+        <span class="cov2" title="2">return states</span>
 }
 
 // Transitions returns a copy of all transitions.
-func (d *Definition) Transitions() []Transition <span class="cov0" title="0">{
+func (d *Definition) Transitions() []Transition <span class="cov2" title="2">{
         transitions := make([]Transition, len(d.transitions))
-        copy(transitions, d.transitions)
-        return transitions
-}</span>
+        if n := copy(transitions, d.transitions); n != len(d.transitions) </span><span class="cov0" title="0">{
+                panic("failed to copy transitions list")</span>
+        }
+
+        <span class="cov2" title="2">return transitions</span>
+}
 
 // Hooks returns the global hooks configuration.
-func (d *Definition) Hooks() Hooks <span class="cov0" title="0">{
+func (d *Definition) Hooks() Hooks <span class="cov2" title="2">{
         return d.hooks
 }</span>
 
@@ -418,28 +764,30 @@ func (d *Definition) Hooks() Hooks <span class="cov0" title="0">{
 func (d *Definition) GetTransitions(
         from gonfa.State,
         event gonfa.Event,
-) []Transition <span class="cov0" title="0">{
+) []Transition <span class="cov3" title="3">{
         var result []Transition
-        for _, t := range d.transitions </span><span class="cov0" title="0">{
-                if t.From == from &amp;&amp; t.On == event </span><span class="cov0" title="0">{
+        for _, t := range d.transitions </span><span class="cov6" title="9">{
+                if t.From == from &amp;&amp; t.On == event </span><span class="cov3" title="3">{
                         result = append(result, t)
                 }</span>
         }
-        <span class="cov0" title="0">return result</span>
+
+        <span class="cov3" title="3">return result</span>
 }
 
 // GetStateConfig returns the configuration for the given state.
 // Returns an empty StateConfig if the state is not configured.
-func (d *Definition) GetStateConfig(state gonfa.State) StateConfig <span class="cov0" title="0">{
+func (d *Definition) GetStateConfig(state gonfa.State) StateConfig <span class="cov4" title="4">{
         config, exists := d.states[state]
-        if !exists </span><span class="cov0" title="0">{
+        if !exists </span><span class="cov1" title="1">{
                 return StateConfig{}
         }</span>
-        <span class="cov0" title="0">return config</span>
+
+        <span class="cov3" title="3">return config</span>
 }
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">// Package definition provides structures and functions for creating
+		<pre class="file" id="file4" style="display: none">// Package definition provides structures and functions for creating
 // immutable state machine definitions. A Definition describes the static
 // structure of a state machine including states, transitions, and hooks.
 //
@@ -498,56 +846,56 @@ type yamlTransition struct {
 func LoadDefinition(
         r io.Reader,
         registry *registry.Registry,
-) (*Definition, error) <span class="cov0" title="0">{
+) (*Definition, error) <span class="cov10" title="11">{
         data, err := io.ReadAll(r)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("failed to read YAML data: %w", err)
         }</span>
 
-        <span class="cov0" title="0">var yamlDef yamlDefinition
-        if err := yaml.Unmarshal(data, &amp;yamlDef); err != nil </span><span class="cov0" title="0">{
+        <span class="cov10" title="11">var yamlDef yamlDefinition
+        if err := yaml.Unmarshal(data, &amp;yamlDef); err != nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("failed to parse YAML: %w", err)
         }</span>
 
         // Validate required fields
-        <span class="cov0" title="0">if yamlDef.InitialState == "" </span><span class="cov0" title="0">{
+        <span class="cov9" title="10">if yamlDef.InitialState == "" </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("initialState is required")
         }</span>
-        <span class="cov0" title="0">if len(yamlDef.Transitions) == 0 </span><span class="cov0" title="0">{
+        <span class="cov9" title="9">if len(yamlDef.Transitions) == 0 </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("at least one transition is required")
         }</span>
 
         // Convert YAML structure to internal types
-        <span class="cov0" title="0">states := make(map[gonfa.State]StateConfig)
-        for stateName, stateConfig := range yamlDef.States </span><span class="cov0" title="0">{
+        <span class="cov8" title="8">states := make(map[gonfa.State]StateConfig)
+        for stateName, stateConfig := range yamlDef.States </span><span class="cov10" title="11">{
                 config := StateConfig{}
 
                 // Convert OnEntry actions
-                for _, actionName := range stateConfig.OnEntry </span><span class="cov0" title="0">{
+                for _, actionName := range stateConfig.OnEntry </span><span class="cov7" title="5">{
                         action, exists := registry.GetAction(actionName)
                         if !exists </span><span class="cov0" title="0">{
                                 return nil, fmt.Errorf(
                                         "action '%s' not found in registry", actionName)
                         }</span>
-                        <span class="cov0" title="0">config.OnEntry = append(config.OnEntry, action)</span>
+                        <span class="cov7" title="5">config.OnEntry = append(config.OnEntry, action)</span>
                 }
 
                 // Convert OnExit actions
-                <span class="cov0" title="0">for _, actionName := range stateConfig.OnExit </span><span class="cov0" title="0">{
+                <span class="cov10" title="11">for _, actionName := range stateConfig.OnExit </span><span class="cov3" title="2">{
                         action, exists := registry.GetAction(actionName)
                         if !exists </span><span class="cov0" title="0">{
                                 return nil, fmt.Errorf(
                                         "action '%s' not found in registry", actionName)
                         }</span>
-                        <span class="cov0" title="0">config.OnExit = append(config.OnExit, action)</span>
+                        <span class="cov3" title="2">config.OnExit = append(config.OnExit, action)</span>
                 }
 
-                <span class="cov0" title="0">states[gonfa.State(stateName)] = config</span>
+                <span class="cov10" title="11">states[gonfa.State(stateName)] = config</span>
         }
 
         // Convert transitions
-        <span class="cov0" title="0">var transitions []Transition
-        for _, yamlTrans := range yamlDef.Transitions </span><span class="cov0" title="0">{
+        <span class="cov8" title="8">var transitions []Transition
+        for _, yamlTrans := range yamlDef.Transitions </span><span class="cov10" title="11">{
                 transition := Transition{
                         From: gonfa.State(yamlTrans.From),
                         To:   gonfa.State(yamlTrans.To),
@@ -555,56 +903,56 @@ func LoadDefinition(
                 }
 
                 // Convert guards
-                for _, guardName := range yamlTrans.Guards </span><span class="cov0" title="0">{
+                for _, guardName := range yamlTrans.Guards </span><span class="cov7" title="5">{
                         guard, exists := registry.GetGuard(guardName)
-                        if !exists </span><span class="cov0" title="0">{
+                        if !exists </span><span class="cov1" title="1">{
                                 return nil, fmt.Errorf(
                                         "guard '%s' not found in registry", guardName)
                         }</span>
-                        <span class="cov0" title="0">transition.Guards = append(transition.Guards, guard)</span>
+                        <span class="cov6" title="4">transition.Guards = append(transition.Guards, guard)</span>
                 }
 
                 // Convert actions
-                <span class="cov0" title="0">for _, actionName := range yamlTrans.Actions </span><span class="cov0" title="0">{
+                <span class="cov9" title="10">for _, actionName := range yamlTrans.Actions </span><span class="cov7" title="5">{
                         action, exists := registry.GetAction(actionName)
-                        if !exists </span><span class="cov0" title="0">{
+                        if !exists </span><span class="cov1" title="1">{
                                 return nil, fmt.Errorf(
                                         "action '%s' not found in registry", actionName)
                         }</span>
-                        <span class="cov0" title="0">transition.Actions = append(transition.Actions, action)</span>
+                        <span class="cov6" title="4">transition.Actions = append(transition.Actions, action)</span>
                 }
 
-                <span class="cov0" title="0">transitions = append(transitions, transition)</span>
+                <span class="cov9" title="9">transitions = append(transitions, transition)</span>
         }
 
         // Convert hooks
-        <span class="cov0" title="0">hooks := Hooks{}
-        for _, actionName := range yamlDef.Hooks.OnSuccess </span><span class="cov0" title="0">{
+        <span class="cov7" title="6">hooks := Hooks{}
+        for _, actionName := range yamlDef.Hooks.OnSuccess </span><span class="cov5" title="3">{
                 action, exists := registry.GetAction(actionName)
-                if !exists </span><span class="cov0" title="0">{
+                if !exists </span><span class="cov1" title="1">{
                         return nil, fmt.Errorf(
                                 "success hook action '%s' not found in registry", actionName)
                 }</span>
-                <span class="cov0" title="0">hooks.OnSuccess = append(hooks.OnSuccess, action)</span>
+                <span class="cov3" title="2">hooks.OnSuccess = append(hooks.OnSuccess, action)</span>
         }
 
-        <span class="cov0" title="0">for _, actionName := range yamlDef.Hooks.OnFailure </span><span class="cov0" title="0">{
+        <span class="cov7" title="5">for _, actionName := range yamlDef.Hooks.OnFailure </span><span class="cov5" title="3">{
                 action, exists := registry.GetAction(actionName)
-                if !exists </span><span class="cov0" title="0">{
+                if !exists </span><span class="cov1" title="1">{
                         return nil, fmt.Errorf(
                                 "failure hook action '%s' not found in registry", actionName)
                 }</span>
-                <span class="cov0" title="0">hooks.OnFailure = append(hooks.OnFailure, action)</span>
+                <span class="cov3" title="2">hooks.OnFailure = append(hooks.OnFailure, action)</span>
         }
 
         // Convert final states
-        <span class="cov0" title="0">var finalStates []gonfa.State
-        for _, stateName := range yamlDef.FinalStates </span><span class="cov0" title="0">{
+        <span class="cov6" title="4">var finalStates []gonfa.State
+        for _, stateName := range yamlDef.FinalStates </span><span class="cov7" title="5">{
                 finalStates = append(finalStates, gonfa.State(stateName))
         }</span>
 
         // Create and return the definition
-        <span class="cov0" title="0">return New(
+        <span class="cov6" title="4">return New(
                 gonfa.State(yamlDef.InitialState),
                 finalStates,
                 states,
@@ -614,7 +962,45 @@ func LoadDefinition(
 }
 </pre>
 		
-		<pre class="file" id="file4" style="display: none">// Package machine provides the runtime implementation of state machines.
+		<pre class="file" id="file5" style="display: none">package definition
+
+import (
+        "context"
+
+        "github.com/dr-dobermann/gonfa/pkg/gonfa"
+)
+
+// testGuard is a simple implementation of gonfa.Guard for testing.
+type testGuard struct {
+        result bool
+}
+
+func (g *testGuard) Check(
+        ctx context.Context,
+        state gonfa.MachineState,
+        payload gonfa.Payload,
+) bool <span class="cov0" title="0">{
+        return g.result
+}</span>
+
+// testAction is a simple implementation of gonfa.Action for testing.
+type testAction struct {
+        name     string
+        executed bool
+        err      error
+}
+
+func (a *testAction) Execute(
+        ctx context.Context,
+        state gonfa.MachineState,
+        payload gonfa.Payload,
+) error <span class="cov0" title="0">{
+        a.executed = true
+        return a.err
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">// Package machine provides the runtime implementation of state machines.
 // A Machine represents a dynamic instance that "lives" on a Definition graph
 // and maintains current state and transition history.
 //
@@ -651,12 +1037,12 @@ type Machine struct {
 
 // New creates a new Machine instance from a Definition,
 // attaching a user-defined business object as its state extender.
-func New(def *definition.Definition, extender gonfa.StateExtender) (*Machine, error) <span class="cov8" title="1">{
+func New(def *definition.Definition, extender gonfa.StateExtender) (*Machine, error) <span class="cov4" title="19">{
         if def == nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("definition cannot be nil")
         }</span>
 
-        <span class="cov8" title="1">return &amp;Machine{
+        <span class="cov4" title="19">return &amp;Machine{
                 definition:    def,
                 currentState:  def.InitialState(),
                 history:       make([]gonfa.HistoryEntry, 0),
@@ -670,26 +1056,26 @@ func Restore(
         def *definition.Definition,
         state *gonfa.Storable,
         extender gonfa.StateExtender,
-) (*Machine, error) <span class="cov8" title="1">{
+) (*Machine, error) <span class="cov3" title="6">{
         if def == nil </span><span class="cov0" title="0">{
                 return nil, fmt.Errorf("definition cannot be nil")
         }</span>
 
-        <span class="cov8" title="1">if state == nil </span><span class="cov8" title="1">{
+        <span class="cov3" title="6">if state == nil </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("storable state cannot be nil")
         }</span>
 
-        <span class="cov8" title="1">if state.CurrentState == "" </span><span class="cov8" title="1">{
+        <span class="cov3" title="5">if state.CurrentState == "" </span><span class="cov1" title="1">{
                 return nil, fmt.Errorf("current state cannot be empty")
         }</span>
 
-        <span class="cov8" title="1">if _, exists := def.States()[state.CurrentState]; !exists </span><span class="cov8" title="1">{
+        <span class="cov2" title="4">if _, exists := def.States()[state.CurrentState]; !exists </span><span class="cov1" title="1">{
                 return nil,
                         fmt.Errorf("current state '%s' not found in definition",
                                 state.CurrentState)
         }</span>
 
-        <span class="cov8" title="1">return &amp;Machine{
+        <span class="cov2" title="3">return &amp;Machine{
                 definition:    def,
                 currentState:  state.CurrentState,
                 history:       append([]gonfa.HistoryEntry{}, state.History...),
@@ -698,7 +1084,7 @@ func Restore(
 }
 
 // CurrentState returns the current state of the machine.
-func (m *Machine) CurrentState() gonfa.State <span class="cov8" title="1">{
+func (m *Machine) CurrentState() gonfa.State <span class="cov10" title="1013">{
         m.mu.RLock()
         defer m.mu.RUnlock()
         return m.currentState
@@ -717,7 +1103,7 @@ func (m *Machine) Fire(
         ctx context.Context,
         event gonfa.Event,
         payload gonfa.Payload,
-) (bool, error) <span class="cov8" title="1">{
+) (bool, error) <span class="cov5" title="22">{
         m.mu.Lock()
         defer m.mu.Unlock()
 
@@ -725,26 +1111,26 @@ func (m *Machine) Fire(
         transitions := m.definition.GetTransitions(m.currentState, event)
 
         // For NFA, try each transition until one succeeds
-        for _, transition := range transitions </span><span class="cov8" title="1">{
+        for _, transition := range transitions </span><span class="cov4" title="16">{
                 success, err := m.attemptTransition(ctx, transition, payload)
-                if err != nil </span><span class="cov8" title="1">{
+                if err != nil </span><span class="cov1" title="1">{
                         // Call failure hooks and return error
                         if hookErr := m.callHooks(ctx, payload, false); hookErr != nil </span><span class="cov0" title="0">{
                                 return false, fmt.Errorf("transition failed: %v, hook error: %v",
                                         err, hookErr)
                         }</span>
 
-                        <span class="cov8" title="1">return false, err</span>
+                        <span class="cov1" title="1">return false, err</span>
                 }
 
-                <span class="cov8" title="1">if success </span><span class="cov8" title="1">{
+                <span class="cov4" title="15">if success </span><span class="cov4" title="14">{
                         // Transition succeeded, call success hooks
                         return true, m.callHooks(ctx, payload, true)
                 }</span>
         }
 
         // No transition succeeded, call failure hooks
-        <span class="cov8" title="1">return false, m.callHooks(ctx, payload, false)</span>
+        <span class="cov3" title="7">return false, m.callHooks(ctx, payload, false)</span>
 }
 
 // attemptTransition attempts to execute a single transition.
@@ -753,31 +1139,31 @@ func (m *Machine) attemptTransition(
         ctx context.Context,
         transition definition.Transition,
         payload gonfa.Payload,
-) (bool, error) <span class="cov8" title="1">{
+) (bool, error) <span class="cov4" title="16">{
         // 1. Check all guards
-        for _, guard := range transition.Guards </span><span class="cov8" title="1">{
-                if !guard.Check(ctx, m, payload) </span><span class="cov8" title="1">{
+        for _, guard := range transition.Guards </span><span class="cov1" title="2">{
+                if !guard.Check(ctx, m, payload) </span><span class="cov1" title="1">{
                         return false, nil // Guard failed, try next transition
                 }</span>
         }
 
         // 2. Execute OnExit actions for current state
-        <span class="cov8" title="1">currentConfig := m.definition.GetStateConfig(m.currentState)
-        for _, action := range currentConfig.OnExit </span><span class="cov8" title="1">{
+        <span class="cov4" title="15">currentConfig := m.definition.GetStateConfig(m.currentState)
+        for _, action := range currentConfig.OnExit </span><span class="cov1" title="1">{
                 if err := action.Execute(ctx, m, payload); err != nil </span><span class="cov0" title="0">{
                         return false, fmt.Errorf("OnExit action failed: %w", err)
                 }</span>
         }
 
         // 3. Execute transition actions
-        <span class="cov8" title="1">for _, action := range transition.Actions </span><span class="cov8" title="1">{
-                if err := action.Execute(ctx, m, payload); err != nil </span><span class="cov8" title="1">{
+        <span class="cov4" title="15">for _, action := range transition.Actions </span><span class="cov1" title="2">{
+                if err := action.Execute(ctx, m, payload); err != nil </span><span class="cov1" title="1">{
                         return false, fmt.Errorf("transition action failed: %w", err)
                 }</span>
         }
 
         // 4. Change state and record history
-        <span class="cov8" title="1">oldState := m.currentState
+        <span class="cov4" title="14">oldState := m.currentState
         m.currentState = transition.To
 
         historyEntry := gonfa.HistoryEntry{
@@ -790,14 +1176,14 @@ func (m *Machine) attemptTransition(
 
         // 5. Execute OnEntry actions for new state
         newConfig := m.definition.GetStateConfig(m.currentState)
-        for _, action := range newConfig.OnEntry </span><span class="cov8" title="1">{
+        for _, action := range newConfig.OnEntry </span><span class="cov3" title="8">{
                 if err := action.Execute(ctx, m, payload); err != nil </span><span class="cov0" title="0">{
                         // Transition already happened, but OnEntry failed
                         return false, fmt.Errorf("OnEntry action failed: %w", err)
                 }</span>
         }
 
-        <span class="cov8" title="1">return true, nil</span>
+        <span class="cov4" title="14">return true, nil</span>
 }
 
 // callHooks executes the appropriate global hooks.
@@ -805,27 +1191,27 @@ func (m *Machine) callHooks(
         ctx context.Context,
         payload gonfa.Payload,
         success bool,
-) error <span class="cov8" title="1">{
+) error <span class="cov5" title="22">{
         hooks := m.definition.Hooks()
         var actionsToRun []gonfa.Action
 
-        if success </span><span class="cov8" title="1">{
+        if success </span><span class="cov4" title="14">{
                 actionsToRun = hooks.OnSuccess
-        }</span> else<span class="cov8" title="1"> {
+        }</span> else<span class="cov3" title="8"> {
                 actionsToRun = hooks.OnFailure
         }</span>
 
-        <span class="cov8" title="1">for _, action := range actionsToRun </span><span class="cov8" title="1">{
+        <span class="cov5" title="22">for _, action := range actionsToRun </span><span class="cov1" title="2">{
                 if err := action.Execute(ctx, m, payload); err != nil </span><span class="cov0" title="0">{
                         return fmt.Errorf("hook execution failed: %w", err)
                 }</span>
         }
 
-        <span class="cov8" title="1">return nil</span>
+        <span class="cov5" title="22">return nil</span>
 }
 
 // Marshal creates a serializable representation of the instance's state.
-func (m *Machine) Marshal() (*gonfa.Storable, error) <span class="cov8" title="1">{
+func (m *Machine) Marshal() (*gonfa.Storable, error) <span class="cov9" title="505">{
         m.mu.RLock()
         defer m.mu.RUnlock()
 
@@ -840,7 +1226,7 @@ func (m *Machine) Marshal() (*gonfa.Storable, error) <span class="cov8" title="1
 }</span>
 
 // History returns a copy of the machine's transition history.
-func (m *Machine) History() []gonfa.HistoryEntry <span class="cov8" title="1">{
+func (m *Machine) History() []gonfa.HistoryEntry <span class="cov9" title="1008">{
         m.mu.RLock()
         defer m.mu.RUnlock()
 
@@ -850,7 +1236,7 @@ func (m *Machine) History() []gonfa.HistoryEntry <span class="cov8" title="1">{
 }</span>
 
 // IsInFinalState checks if the machine is currently in a final (accepting) state.
-func (m *Machine) IsInFinalState() bool <span class="cov8" title="1">{
+func (m *Machine) IsInFinalState() bool <span class="cov1" title="2">{
         m.mu.RLock()
         defer m.mu.RUnlock()
         return m.definition.IsFinalState(m.currentState)
@@ -859,12 +1245,12 @@ func (m *Machine) IsInFinalState() bool <span class="cov8" title="1">{
 // StateExtender returns the attached user-defined business object.
 // Note: This method is safe to call from within actions/guards as it doesn't
 // acquire additional locks (the machine is already locked during Fire).
-func (m *Machine) StateExtender() gonfa.StateExtender <span class="cov8" title="1">{
+func (m *Machine) StateExtender() gonfa.StateExtender <span class="cov9" title="1002">{
         return m.stateExtender
 }</span>
 </pre>
 		
-		<pre class="file" id="file5" style="display: none">package machine
+		<pre class="file" id="file7" style="display: none">package machine
 
 import (
         "context"
@@ -886,7 +1272,7 @@ func (g *testGuard) Check(
         ctx context.Context,
         state gonfa.MachineState,
         payload gonfa.Payload,
-) bool <span class="cov8" title="1">{
+) bool <span class="cov3" title="2">{
         g.calls++
         return g.result
 }</span>
@@ -902,14 +1288,14 @@ func (a *testAction) Execute(
         ctx context.Context,
         state gonfa.MachineState,
         payload gonfa.Payload,
-) error <span class="cov8" title="1">{
+) error <span class="cov10" title="13">{
         a.calls++
         a.executed = true
         return a.err
 }</span>
 </pre>
 		
-		<pre class="file" id="file6" style="display: none">// Package registry provides a mapping from string names to Guard and Action
+		<pre class="file" id="file8" style="display: none">// Package registry provides a mapping from string names to Guard and Action
 // objects. This allows for decoupling of declarative definitions (from files)
 // and actual implementation code.
 //
@@ -940,7 +1326,7 @@ type Registry struct {
 }
 
 // New creates a new Registry instance.
-func New() *Registry <span class="cov8" title="1">{
+func New() *Registry <span class="cov10" title="8">{
         return &amp;Registry{
                 guards:  make(map[string]gonfa.Guard),
                 actions: make(map[string]gonfa.Action),
@@ -949,22 +1335,22 @@ func New() *Registry <span class="cov8" title="1">{
 
 // RegisterGuard registers a guard object under a unique name.
 // Returns an error if the name is already registered.
-func (r *Registry) RegisterGuard(name string, guard gonfa.Guard) error <span class="cov8" title="1">{
-        if name == "" </span><span class="cov8" title="1">{
+func (r *Registry) RegisterGuard(name string, guard gonfa.Guard) error <span class="cov10" title="8">{
+        if name == "" </span><span class="cov1" title="1">{
                 return fmt.Errorf("guard name cannot be empty")
         }</span>
-        <span class="cov8" title="1">if guard == nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="7">if guard == nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("guard cannot be nil")
         }</span>
 
-        <span class="cov8" title="1">r.mu.Lock()
+        <span class="cov9" title="7">r.mu.Lock()
         defer r.mu.Unlock()
 
-        if _, exists := r.guards[name]; exists </span><span class="cov8" title="1">{
+        if _, exists := r.guards[name]; exists </span><span class="cov1" title="1">{
                 return fmt.Errorf("guard with name '%s' is already registered", name)
         }</span>
 
-        <span class="cov8" title="1">r.guards[name] = guard
+        <span class="cov8" title="6">r.guards[name] = guard
         return nil</span>
 }
 
@@ -973,29 +1359,29 @@ func (r *Registry) RegisterGuard(name string, guard gonfa.Guard) error <span cla
 func (r *Registry) RegisterAction(
         name string,
         action gonfa.Action,
-) error <span class="cov8" title="1">{
-        if name == "" </span><span class="cov8" title="1">{
+) error <span class="cov10" title="8">{
+        if name == "" </span><span class="cov1" title="1">{
                 return fmt.Errorf("action name cannot be empty")
         }</span>
-        <span class="cov8" title="1">if action == nil </span><span class="cov0" title="0">{
+        <span class="cov9" title="7">if action == nil </span><span class="cov0" title="0">{
                 return fmt.Errorf("action cannot be nil")
         }</span>
 
-        <span class="cov8" title="1">r.mu.Lock()
+        <span class="cov9" title="7">r.mu.Lock()
         defer r.mu.Unlock()
 
-        if _, exists := r.actions[name]; exists </span><span class="cov8" title="1">{
+        if _, exists := r.actions[name]; exists </span><span class="cov1" title="1">{
                 return fmt.Errorf("action with name '%s' is already registered",
                         name)
         }</span>
 
-        <span class="cov8" title="1">r.actions[name] = action
+        <span class="cov8" title="6">r.actions[name] = action
         return nil</span>
 }
 
 // GetGuard retrieves a guard by name.
 // Returns the guard and true if found, nil and false otherwise.
-func (r *Registry) GetGuard(name string) (gonfa.Guard, bool) <span class="cov8" title="1">{
+func (r *Registry) GetGuard(name string) (gonfa.Guard, bool) <span class="cov7" title="5">{
         r.mu.RLock()
         defer r.mu.RUnlock()
 
@@ -1005,7 +1391,7 @@ func (r *Registry) GetGuard(name string) (gonfa.Guard, bool) <span class="cov8" 
 
 // GetAction retrieves an action by name.
 // Returns the action and true if found, nil and false otherwise.
-func (r *Registry) GetAction(name string) (gonfa.Action, bool) <span class="cov8" title="1">{
+func (r *Registry) GetAction(name string) (gonfa.Action, bool) <span class="cov7" title="5">{
         r.mu.RLock()
         defer r.mu.RUnlock()
 
@@ -1014,31 +1400,31 @@ func (r *Registry) GetAction(name string) (gonfa.Action, bool) <span class="cov8
 }</span>
 
 // ListGuards returns a slice of all registered guard names.
-func (r *Registry) ListGuards() []string <span class="cov8" title="1">{
+func (r *Registry) ListGuards() []string <span class="cov7" title="4">{
         r.mu.RLock()
         defer r.mu.RUnlock()
 
         names := make([]string, 0, len(r.guards))
-        for name := range r.guards </span><span class="cov8" title="1">{
+        for name := range r.guards </span><span class="cov7" title="4">{
                 names = append(names, name)
         }</span>
-        <span class="cov8" title="1">return names</span>
+        <span class="cov7" title="4">return names</span>
 }
 
 // ListActions returns a slice of all registered action names.
-func (r *Registry) ListActions() []string <span class="cov8" title="1">{
+func (r *Registry) ListActions() []string <span class="cov7" title="4">{
         r.mu.RLock()
         defer r.mu.RUnlock()
 
         names := make([]string, 0, len(r.actions))
-        for name := range r.actions </span><span class="cov8" title="1">{
+        for name := range r.actions </span><span class="cov7" title="4">{
                 names = append(names, name)
         }</span>
-        <span class="cov8" title="1">return names</span>
+        <span class="cov7" title="4">return names</span>
 }
 </pre>
 		
-		<pre class="file" id="file7" style="display: none">package registry
+		<pre class="file" id="file9" style="display: none">package registry
 
 import (
         "context"

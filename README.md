@@ -77,7 +77,7 @@ func (a *NotifyAction) Execute(ctx context.Context, state gonfa.MachineState, pa
 }
 
 func main() {
-    // Build state machine definition
+    // Build state machine definition with strict validation
     definition, err := builder.New().
         InitialState("Draft").
         FinalStates("Approved").
@@ -126,7 +126,6 @@ initialState: Draft
 
 # Final (accepting) states
 finalStates:
-  - Approved
   - Archived
 
 hooks:
@@ -143,7 +142,7 @@ states:
       - cleanupTask
   Approved:
     onEntry:
-      - archiveDocument
+      - notifyApproval
 
 transitions:
   - from: Draft
@@ -156,6 +155,20 @@ transitions:
     on: Approve
     guards: 
       - isManager
+  - from: InReview
+    to: Rejected
+    on: Reject
+    guards:
+      - isManager
+  - from: Rejected
+    to: InReview
+    on: Rework
+  - from: Approved
+    to: Archived
+    on: Archive
+  - from: Rejected
+    to: Archived
+    on: Archive
 ```
 
 ```go
