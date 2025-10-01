@@ -22,6 +22,7 @@
 - **Интеграция бизнес-объектов**: Прикрепление пользовательских бизнес-объектов как StateExtender
 - **Поддержка финальных состояний**: Явная поддержка принимающих/финальных состояний
 - **Расширяемые Actions и Guards**: Плагинная система для пользовательской бизнес-логики с полным доступом к контексту
+- **Строгая валидация**: Комплексная проверка целостности предотвращает типичные ошибки проектирования конечных автоматов
 - **Комплексное тестирование**: >90% покрытие кода с обширными unit и интеграционными тестами
 - **Нулевые внешние зависимости**: Основная библиотека не имеет внешних зависимостей (кроме поддержки YAML)
 
@@ -76,17 +77,17 @@ func (a *NotifyAction) Execute(ctx context.Context, state gonfa.MachineState, pa
 }
 
 func main() {
-    // Создание определения конечного автомата
+    // Создание определения конечного автомата со строгой валидацией
     definition, err := builder.New().
-        InitialState("Черновик").
-        FinalStates("Одобрено").
-        AddTransition("Черновик", "НаРассмотрении", "Отправить").
+        InitialState("Draft").
+        FinalStates("Approved").
+        AddTransition("Draft", "InReview", "Submit").
         WithActions(&NotifyAction{}).
-        AddTransition("НаРассмотрении", "Одобрено", "Одобрить").
+        AddTransition("InReview", "Approved", "Approve").
         WithGuards(&ManagerGuard{}).
         Build()
     if err != nil {
-        log.Fatal(err)
+        log.Fatal(err) // Завершится с ошибкой при проблемах целостности определения
     }
 
     // Создание бизнес-объекта
@@ -104,7 +105,7 @@ func main() {
     
     // Запуск событий
     ctx := context.Background()
-    success, err := sm.Fire(ctx, "Отправить", nil)
+    success, err := sm.Fire(ctx, "Submit", nil)
     if err != nil {
         log.Fatal(err)
     }
@@ -121,7 +122,11 @@ func main() {
 
 ```yaml
 # workflow.yaml
-initialState: Черновик
+initialState: Draft
+
+# Финальные (принимающие) состояния
+finalStates:
+  - Archived
 
 hooks:
   onSuccess:
@@ -130,23 +135,40 @@ hooks:
     - logFailure
 
 states:
-  НаРассмотрении:
+  InReview:
     onEntry:
       - assignReviewer
     onExit:
       - cleanupTask
+  Approved:
+    onEntry:
+      - notifyApproval
 
 transitions:
-  - from: Черновик
-    to: НаРассмотрении
-    on: Отправить
+  - from: Draft
+    to: InReview
+    on: Submit
     actions:
       - notifyAuthor
-  - from: НаРассмотрении
-    to: Одобрено
-    on: Одобрить
+  - from: InReview
+    to: Approved
+    on: Approve
     guards: 
       - isManager
+  - from: InReview
+    to: Rejected
+    on: Reject
+    guards:
+      - isManager
+  - from: Rejected
+    to: InReview
+    on: Rework
+  - from: Approved
+    to: Archived
+    on: Archive
+  - from: Rejected
+    to: Archived
+    on: Archive
 ```
 
 ```go
@@ -162,47 +184,54 @@ registry := registry.New()
 registry.RegisterGuard("isManager", &ManagerGuard{})
 registry.RegisterAction("notifyAuthor", &NotifyAction{})
 
-definition, err := definition.LoadDefinition(file, registry)
+definition, err := definition.Load(file, registry)
 if err != nil {
     log.Fatal(err)
 }
 
-machine := machine.NewMachine(definition)
+// Создание бизнес-объекта
+doc := &Document{ID: "DOC-001", Title: "Предложение проекта"}
+
+// Создание машины с бизнес-объектом
+machine, err := machine.New(definition, doc)
+if err != nil {
+    log.Fatal(err)
+}
 ```
 
 ## Архитектура
 
-goNFA разделяет статические **Определения** и динамические **Экземпляры машин**:
+goNFA разделяет статические **Определения** от динамических **экземпляров Машин**:
 
-- **Definition**: Неизменяемое описание графа состояний, переходов и связанных действий
-- **Machine**: Runtime экземпляр, который "живет" на графе Definition с текущим состоянием
-- **Registry**: Отображает строковые имена на реализации Guard/Action для загрузки YAML
-- **Builder**: Fluent API для программного создания Definition
+- **Definition**: Неизменяемое описание графа состояний, переходов и связанных actions
+- **Machine**: Экземпляр времени выполнения, который "живет" на графе Definition с текущим состоянием и прикрепленным бизнес-объектом
+- **StateExtender**: Пользовательский бизнес-объект, прикрепленный к экземплярам Machine
+- **MachineState**: Интерфейс только для чтения, предоставляющий доступ к состоянию машины и бизнес-объекту
+- **Registry**: Сопоставляет строковые имена с реализациями Guard/Action для загрузки YAML
+- **Builder**: Fluent API для программного создания Definition с поддержкой финальных состояний
 
 ## Структура пакетов
 
 - [`pkg/gonfa`](pkg/gonfa/README.md) - Основные типы и интерфейсы
 - [`pkg/definition`](pkg/definition/README.md) - Определения конечных автоматов и загрузка YAML
 - [`pkg/builder`](pkg/builder/README.md) - Fluent API для создания определений
-- [`pkg/machine`](pkg/machine/README.md) - Runtime реализация конечных автоматов
-- [`pkg/registry`](pkg/registry/README.md) - Отображение имен на объекты для поддержки YAML
-- [`examples/`](examples/) - Примеры использования и конфигурации
+- [`pkg/machine`](pkg/machine/README.md) - Реализация конечного автомата времени выполнения
+- [`pkg/registry`](pkg/registry/README.md) - Сопоставление имен с объектами для поддержки YAML
+- [`examples/`](examples/) - Примеры использования и образцы конфигураций
 
 ## Документация
 
-- [Техническая спецификация](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.ru.v3.8.md) - Подробные технические требования
-- [Техническая спецификация (EN)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.v3.8.md) - English version
+- [Техническая спецификация](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.v3.8.md) - Подробные технические требования
 - [Документация API](https://pkg.go.dev/github.com/dr-dobermann/gonfa) - Справочник GoDoc
 - [Примеры](examples/) - Рабочие примеры кода
-- [История изменений](CHANGELOG.md) - История версий и изменения
-- [English README](README.md) - English version
+- [Changelog](CHANGELOG.md) - История версий и изменения
 
 ## Сборка и тестирование
 
-### Предварительные требования
+### Требования
 
 - Go 1.21 или новее
-- Make (опционально, для удобства команд)
+- Make (опционально, для удобных команд)
 
 ### Команды разработки
 
@@ -225,7 +254,7 @@ make run-example-document_workflow
 # Генерация моков (требует mockery)
 make mocks
 
-# Проверка кода линтером
+# Линтинг кода
 make lint
 
 # Цикл разработки (очистка, моки, тесты)
@@ -245,7 +274,7 @@ go build -o bin/document_workflow examples/document_workflow.go
 ./bin/document_workflow
 ```
 
-## Вклад в проект
+## Участие в разработке
 
 1. Сделайте fork репозитория
 2. Создайте ветку для функции (`git checkout -b feature/amazing-feature`)
@@ -260,13 +289,13 @@ go build -o bin/document_workflow examples/document_workflow.go
 
 - Следуйте соглашениям и идиомам Go
 - Поддерживайте покрытие тестами >90%
-- Добавляйте подробную документацию для публичных API
+- Добавляйте исчерпывающую документацию для публичных API
 - Используйте осмысленные сообщения коммитов
-- По возможности держите длину строк ≤80 символов
+- По возможности ограничивайте длину строк ≤80 символов
 
 ## Лицензия
 
-Этот проект лицензирован под GNU Lesser General Public License v2.1 - смотрите файл [LICENSE](LICENSE) для подробностей.
+Этот проект лицензирован под GNU Lesser General Public License v2.1 - см. файл [LICENSE](LICENSE) для подробностей.
 
 ## Автор
 
@@ -274,9 +303,10 @@ go build -o bin/document_workflow examples/document_workflow.go
 
 ## Ссылки
 
-- [Репозиторий GitHub](https://github.com/dr-dobermann/gonfa)
+- [GitHub репозиторий](https://github.com/dr-dobermann/gonfa)
 - [Трекер проблем](https://github.com/dr-dobermann/gonfa/issues)
 - [Обсуждения](https://github.com/dr-dobermann/gonfa/discussions)
+- [English version README](README.md)
 
 ---
 

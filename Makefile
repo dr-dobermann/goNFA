@@ -9,13 +9,15 @@
 # Author: dr-dobermann (rgabtiov@gmail.com)
 # License: LGPL-2.1 (see LICENSE file in the project root)
 
-.PHONY: all build test clean mocks lint fmt vet examples help
+.PHONY: all build test clean mocks lint fmt vet examples help tag
 
 # Variables
 BINARY_DIR := bin
 EXAMPLES_DIR := examples
 MOCKS_DIR := generated
 GO_FILES := $(shell find . -name "*.go" -not -path "./$(MOCKS_DIR)/*" -not -path "./vendor/*")
+# Version number
+VERSION = $(shell cat .version)
 
 # Default target
 all: clean mocks test build examples
@@ -33,6 +35,7 @@ help:
 	@echo "  vet       - Run go vet"
 	@echo "  examples  - Build example binaries"
 	@echo "  install   - Install required tools"
+	@echo "  tag       - Update project tag from .version"
 
 # Install required tools
 install:
@@ -110,3 +113,9 @@ ci: install lint test build examples
 # Show coverage
 coverage: test
 	go tool cover -func=coverage.out | tail -1
+
+# Set project tag from .version
+tag: 
+	@git tag -a ${VERSION} -m "version ${VERSION}"
+	@git push origin --tags
+
