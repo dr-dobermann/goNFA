@@ -2,6 +2,7 @@ package definition
 
 import (
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -11,13 +12,31 @@ import (
 	"github.com/dr-dobermann/gonfa/pkg/registry"
 )
 
-func createTestRegistry() *registry.Registry {
-	reg := registry.New()
-	reg.RegisterAction("action1", &testAction{name: "action1"})
-	reg.RegisterAction("action2", &testAction{name: "action2"})
-	reg.RegisterGuard("guard1", &testGuard{result: true})
-	reg.RegisterGuard("guard2", &testGuard{result: false})
-	return reg
+var (
+	testRegistry *registry.Registry
+	registryOnce sync.Once
+)
+
+func getTestRegistry() *registry.Registry {
+	registryOnce.Do(func() {
+		reg := registry.New()
+
+		if err := reg.RegisterAction("action1", &testAction{name: "action1"}); err != nil {
+			panic("failed to register action1: " + err.Error())
+		}
+		if err := reg.RegisterAction("action2", &testAction{name: "action2"}); err != nil {
+			panic("failed to register action2: " + err.Error())
+		}
+		if err := reg.RegisterGuard("guard1", &testGuard{result: true}); err != nil {
+			panic("failed to register guard1: " + err.Error())
+		}
+		if err := reg.RegisterGuard("guard2", &testGuard{result: false}); err != nil {
+			panic("failed to register guard2: " + err.Error())
+		}
+
+		testRegistry = reg
+	})
+	return testRegistry
 }
 
 func TestLoadDefinition(t *testing.T) {
@@ -65,7 +84,7 @@ transitions:
     on: Event3
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		def, err := LoadDefinition(reader, reg)
@@ -85,7 +104,7 @@ transitions:
     on: Event1
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -98,7 +117,7 @@ transitions:
 initialState: Start
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -109,7 +128,7 @@ initialState: Start
 	t.Run("invalid YAML", func(t *testing.T) {
 		yamlData := `invalid: yaml: content: [`
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -128,7 +147,7 @@ transitions:
       - nonExistentAction
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -147,7 +166,7 @@ transitions:
       - nonExistentGuard
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -167,7 +186,7 @@ transitions:
     on: Event1
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -187,7 +206,7 @@ transitions:
     on: Event1
 `
 
-		reg := createTestRegistry()
+		reg := getTestRegistry()
 		reader := strings.NewReader(yamlData)
 
 		_, err := LoadDefinition(reader, reg)
@@ -216,7 +235,7 @@ transitions:
     on: Event1
 `
 
-	reg := createTestRegistry()
+	reg := getTestRegistry()
 	reader := strings.NewReader(yamlData)
 
 	def, err := LoadDefinition(reader, reg)
@@ -254,7 +273,7 @@ transitions:
     on: Event1
 `
 
-	reg := createTestRegistry()
+	reg := getTestRegistry()
 	reader := strings.NewReader(yamlData)
 
 	def, err := LoadDefinition(reader, reg)
@@ -291,7 +310,7 @@ transitions:
       - action2
 `
 
-	reg := createTestRegistry()
+	reg := getTestRegistry()
 	reader := strings.NewReader(yamlData)
 
 	def, err := LoadDefinition(reader, reg)

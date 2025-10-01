@@ -12,7 +12,7 @@ func TestStateSet(t *testing.T) {
 	t.Run("newStateSet creates proper set", func(t *testing.T) {
 		states := []gonfa.State{"A", "B", "C"}
 		set := newStateSet(states)
-		
+
 		assert.Len(t, set, 3)
 		assert.True(t, set.contains("A"))
 		assert.True(t, set.contains("B"))
@@ -29,7 +29,7 @@ func TestStateSet(t *testing.T) {
 	t.Run("duplicate states in slice", func(t *testing.T) {
 		states := []gonfa.State{"A", "B", "A", "C"}
 		set := newStateSet(states)
-		
+
 		// Set should deduplicate
 		assert.Len(t, set, 3)
 		assert.True(t, set.contains("A"))
@@ -45,10 +45,10 @@ func TestTransitionGraph(t *testing.T) {
 			{From: "A", To: "C", On: "event2"},
 			{From: "B", To: "C", On: "event3"},
 		}
-		
+
 		graph, err := newTransitionGraph(transitions)
 		assert.NoError(t, err)
-		
+
 		assert.Len(t, graph, 2)
 		assert.Len(t, graph["A"], 2)
 		assert.Len(t, graph["B"], 1)
@@ -62,10 +62,10 @@ func TestTransitionGraph(t *testing.T) {
 			{From: "A", To: "B", On: "event1"},
 			{From: "A", To: "B", On: "event2"}, // Same states, different event - allowed
 		}
-		
+
 		graph, err := newTransitionGraph(transitions)
 		assert.NoError(t, err)
-		
+
 		// Should have one A->B in graph (connectivity), but both events are valid
 		assert.Len(t, graph["A"], 1)
 		assert.True(t, graph["A"].contains("B"))
@@ -76,7 +76,7 @@ func TestTransitionGraph(t *testing.T) {
 			{From: "A", To: "B", On: "event1"},
 			{From: "A", To: "B", On: "event1"}, // Exact duplicate - error
 		}
-		
+
 		_, err := newTransitionGraph(transitions)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "duplicate transition from 'A' to 'B' on event 'event1'")
@@ -220,10 +220,10 @@ func TestBuildStateCounters(t *testing.T) {
 
 		assert.Equal(t, 0, counters["A"].incoming)
 		assert.Equal(t, 2, counters["A"].outgoing)
-		
+
 		assert.Equal(t, 1, counters["B"].incoming)
 		assert.Equal(t, 1, counters["B"].outgoing)
-		
+
 		assert.Equal(t, 2, counters["C"].incoming)
 		assert.Equal(t, 0, counters["C"].outgoing)
 	})
@@ -238,7 +238,7 @@ func TestBuildStateCounters(t *testing.T) {
 
 		assert.Equal(t, 0, counters["A"].incoming)
 		assert.Equal(t, 1, counters["A"].outgoing)
-		
+
 		assert.Equal(t, 1, counters["B"].incoming)
 		assert.Equal(t, 0, counters["B"].outgoing)
 	})
@@ -462,9 +462,9 @@ func TestCheckStatesIntegration(t *testing.T) {
 		assert.Error(t, err)
 		// The error can be either about hanging state or unreachable final state
 		// Both are valid detection points for this invalid configuration
-		assert.True(t, 
+		assert.True(t,
 			err.Error() == "state 'Unreachable' isn't an initial state but has no incoming transitions" ||
-			err.Error() == "final state 'Unreachable' is not reachable from initial state",
+				err.Error() == "final state 'Unreachable' is not reachable from initial state",
 			"Expected hanging state or unreachable final state error, got: %s", err.Error())
 	})
 

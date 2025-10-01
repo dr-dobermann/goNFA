@@ -39,10 +39,10 @@ type transitionKey struct {
 func newTransitionGraph(transitions []Transition) (transitionGraph, error) {
 	graph := make(transitionGraph)
 	seen := make(map[transitionKey]struct{})
-	
+
 	for _, t := range transitions {
 		key := transitionKey{from: t.From, to: t.To, on: t.On}
-		
+
 		// Check for exact duplicate transition (From, To, Event)
 		if _, exists := seen[key]; exists {
 			return nil, fmt.Errorf(
@@ -50,14 +50,14 @@ func newTransitionGraph(transitions []Transition) (transitionGraph, error) {
 				t.From, t.To, t.On)
 		}
 		seen[key] = struct{}{}
-		
+
 		// Build graph for connectivity analysis
 		if graph[t.From] == nil {
 			graph[t.From] = make(stateSet)
 		}
 		graph[t.From][t.To] = struct{}{}
 	}
-	
+
 	return graph, nil
 }
 
@@ -65,7 +65,6 @@ func newTransitionGraph(transitions []Transition) (transitionGraph, error) {
 type stateCounter struct {
 	incoming int
 	outgoing int
-	visited  bool
 }
 
 // checkStates performs optimized integrity check
@@ -77,35 +76,35 @@ func checkStates(
 ) error {
 	stateSet := newStateSet(states)
 	finalSet := newStateSet(finalStates)
-	
+
 	if err := validateInitialState(initialState, stateSet); err != nil {
 		return err
 	}
-	
+
 	if err := validateFinalStates(finalSet, stateSet); err != nil {
 		return err
 	}
-	
+
 	graph, err := newTransitionGraph(transitions)
 	if err != nil {
 		return err
 	}
-	
+
 	if err := validateTransitionStates(graph, stateSet); err != nil {
 		return err
 	}
-	
+
 	return analyzeGraphStructure(initialState, finalSet, stateSet, graph)
 }
 
 // validateInitialState checks if initial state exists
 func validateInitialState(
-	initialState gonfa.State, 
+	initialState gonfa.State,
 	stateSet stateSet,
 ) error {
 	if !stateSet.contains(initialState) {
 		return fmt.Errorf(
-			"initial state '%s' doesn't exist in states", 
+			"initial state '%s' doesn't exist in states",
 			initialState)
 	}
 	return nil
@@ -116,7 +115,7 @@ func validateFinalStates(finalSet, stateSet stateSet) error {
 	for state := range finalSet {
 		if !stateSet.contains(state) {
 			return fmt.Errorf(
-				"final state '%s' doesn't exist in states", 
+				"final state '%s' doesn't exist in states",
 				state)
 		}
 	}
@@ -125,7 +124,7 @@ func validateFinalStates(finalSet, stateSet stateSet) error {
 
 // validateTransitionStates checks if transition states exist
 func validateTransitionStates(
-	graph transitionGraph, 
+	graph transitionGraph,
 	stateSet stateSet,
 ) error {
 	for fromState, toStates := range graph {
@@ -134,7 +133,7 @@ func validateTransitionStates(
 				"state '%s' doesn't exist as transition source",
 				fromState)
 		}
-		
+
 		for toState := range toStates {
 			if !stateSet.contains(toState) {
 				return fmt.Errorf(
@@ -155,63 +154,63 @@ func analyzeGraphStructure(
 ) error {
 	counters := buildStateCounters(stateSet, graph)
 	reachable := findReachableStates(initialState, graph)
-	
+
 	if err := validateInitialStateUsage(initialState, graph); err != nil {
 		return err
 	}
-	
+
 	if err := validateStateConnectivity(
-		counters, 
-		initialState, 
+		counters,
+		initialState,
 		finalSet,
 	); err != nil {
 		return err
 	}
-	
+
 	return validateFinalStateReachability(finalSet, reachable)
 }
 
 // buildStateCounters creates transition counters for all states
 func buildStateCounters(
-	stateSet stateSet, 
+	stateSet stateSet,
 	graph transitionGraph,
 ) map[gonfa.State]*stateCounter {
 	counters := make(map[gonfa.State]*stateCounter, len(stateSet))
-	
+
 	// Initialize counters for all states
 	for state := range stateSet {
 		counters[state] = &stateCounter{}
 	}
-	
+
 	// Count transitions
 	for fromState, toStates := range graph {
 		if counter := counters[fromState]; counter != nil {
 			counter.outgoing = len(toStates)
 		}
-		
+
 		for toState := range toStates {
 			if counter := counters[toState]; counter != nil {
 				counter.incoming++
 			}
 		}
 	}
-	
+
 	return counters
 }
 
 // findReachableStates performs BFS to find all reachable states
 func findReachableStates(
-	initialState gonfa.State, 
+	initialState gonfa.State,
 	graph transitionGraph,
 ) stateSet {
 	reachable := make(stateSet)
 	queue := []gonfa.State{initialState}
 	reachable[initialState] = struct{}{}
-	
+
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
-		
+
 		for nextState := range graph[current] {
 			if !reachable.contains(nextState) {
 				reachable[nextState] = struct{}{}
@@ -219,18 +218,18 @@ func findReachableStates(
 			}
 		}
 	}
-	
+
 	return reachable
 }
 
 // validateInitialStateUsage checks if initial state has transitions
 func validateInitialStateUsage(
-	initialState gonfa.State, 
+	initialState gonfa.State,
 	graph transitionGraph,
 ) error {
 	if _, exists := graph[initialState]; !exists {
 		return fmt.Errorf(
-			"no transitions start from initial state '%s'", 
+			"no transitions start from initial state '%s'",
 			initialState)
 	}
 	return nil
@@ -244,9 +243,9 @@ func validateStateConnectivity(
 ) error {
 	for state, counter := range counters {
 		if err := validateSingleState(
-			state, 
-			counter, 
-			initialState, 
+			state,
+			counter,
+			initialState,
 			finalSet,
 		); err != nil {
 			return err
@@ -263,32 +262,32 @@ func validateSingleState(
 	finalSet stateSet,
 ) error {
 	isFinal := finalSet.contains(state)
-	
+
 	// Check for hanging states
 	if counter.incoming == 0 && state != initialState {
 		return fmt.Errorf(
 			"state '%s' isn't an initial state but has no incoming transitions",
 			state)
 	}
-	
+
 	// Check for dead-end non-final states
 	if counter.outgoing == 0 && !isFinal {
 		return fmt.Errorf("state '%s' is a dead-end state", state)
 	}
-	
+
 	// Check for final states with outgoing transitions
 	if isFinal && counter.outgoing > 0 {
 		return fmt.Errorf(
-			"final state '%s' has outgoing transition(s)", 
+			"final state '%s' has outgoing transition(s)",
 			state)
 	}
-	
+
 	return nil
 }
 
 // validateFinalStateReachability checks if all final states are reachable
 func validateFinalStateReachability(
-	finalSet stateSet, 
+	finalSet stateSet,
 	reachable stateSet,
 ) error {
 	for state := range finalSet {

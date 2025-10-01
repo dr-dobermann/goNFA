@@ -64,7 +64,7 @@ func New(
 
 	ss := make([]gonfa.State, len(states))
 	i := 0
-	for s, _ := range states {
+	for s := range states {
 		ss[i] = s
 		i = i + 1
 	}
