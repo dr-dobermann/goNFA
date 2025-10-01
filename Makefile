@@ -116,6 +116,6 @@ coverage: test
 
 # Set project tag from .version
 tag: 
-	@git tag -a ${VERSION} -m "version ${VERSION}"
-	@git push --all
+	git tag -a ${VERSION} -m "version ${VERSION}"
+	@git push origin --tags
 

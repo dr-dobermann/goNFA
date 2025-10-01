@@ -33,8 +33,7 @@ go.work
 *.swo
 
 # Coverage report
-coverage.out
-coverage.html
+coverage.*
 
 # OS generated files
 .DS_Store
