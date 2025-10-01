@@ -27,18 +27,38 @@ func (s stateSet) contains(state gonfa.State) bool {
 // transitionGraph represents state transition graph
 type transitionGraph map[gonfa.State]stateSet
 
+// transitionKey uniquely identifies a transition
+type transitionKey struct {
+	from gonfa.State
+	to   gonfa.State
+	on   gonfa.Event
+}
+
 // newTransitionGraph builds transition graph from transitions slice
-func newTransitionGraph(transitions []Transition) transitionGraph {
+// and validates for duplicate transitions
+func newTransitionGraph(transitions []Transition) (transitionGraph, error) {
 	graph := make(transitionGraph)
+	seen := make(map[transitionKey]struct{})
 	
 	for _, t := range transitions {
+		key := transitionKey{from: t.From, to: t.To, on: t.On}
+		
+		// Check for exact duplicate transition (From, To, Event)
+		if _, exists := seen[key]; exists {
+			return nil, fmt.Errorf(
+				"duplicate transition from '%s' to '%s' on event '%s'",
+				t.From, t.To, t.On)
+		}
+		seen[key] = struct{}{}
+		
+		// Build graph for connectivity analysis
 		if graph[t.From] == nil {
 			graph[t.From] = make(stateSet)
 		}
 		graph[t.From][t.To] = struct{}{}
 	}
 	
-	return graph
+	return graph, nil
 }
 
 // stateCounter tracks incoming and outgoing transition counts
@@ -66,7 +86,10 @@ func checkStates(
 		return err
 	}
 	
-	graph := newTransitionGraph(transitions)
+	graph, err := newTransitionGraph(transitions)
+	if err != nil {
+		return err
+	}
 	
 	if err := validateTransitionStates(graph, stateSet); err != nil {
 		return err

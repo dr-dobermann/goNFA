@@ -46,7 +46,8 @@ func TestTransitionGraph(t *testing.T) {
 			{From: "B", To: "C", On: "event3"},
 		}
 		
-		graph := newTransitionGraph(transitions)
+		graph, err := newTransitionGraph(transitions)
+		assert.NoError(t, err)
 		
 		assert.Len(t, graph, 2)
 		assert.Len(t, graph["A"], 2)
@@ -56,21 +57,34 @@ func TestTransitionGraph(t *testing.T) {
 		assert.True(t, graph["B"].contains("C"))
 	})
 
-	t.Run("duplicate transitions are deduplicated", func(t *testing.T) {
+	t.Run("different events to same target are allowed", func(t *testing.T) {
 		transitions := []Transition{
 			{From: "A", To: "B", On: "event1"},
-			{From: "A", To: "B", On: "event2"}, // Same transition, different event
+			{From: "A", To: "B", On: "event2"}, // Same states, different event - allowed
 		}
 		
-		graph := newTransitionGraph(transitions)
+		graph, err := newTransitionGraph(transitions)
+		assert.NoError(t, err)
 		
-		// Should only have one A->B transition
+		// Should have one A->B in graph (connectivity), but both events are valid
 		assert.Len(t, graph["A"], 1)
 		assert.True(t, graph["A"].contains("B"))
 	})
 
+	t.Run("exact duplicate transitions cause error", func(t *testing.T) {
+		transitions := []Transition{
+			{From: "A", To: "B", On: "event1"},
+			{From: "A", To: "B", On: "event1"}, // Exact duplicate - error
+		}
+		
+		_, err := newTransitionGraph(transitions)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "duplicate transition from 'A' to 'B' on event 'event1'")
+	})
+
 	t.Run("empty transitions", func(t *testing.T) {
-		graph := newTransitionGraph([]Transition{})
+		graph, err := newTransitionGraph([]Transition{})
+		assert.NoError(t, err)
 		assert.Len(t, graph, 0)
 	})
 }
@@ -138,6 +152,20 @@ func TestCheckStatesOptimized(t *testing.T) {
 		err := checkStates(initialState, states, transitions, finalStates)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "state 'NonExistent' doesn't exist as transition target")
+	})
+
+	t.Run("duplicate transitions", func(t *testing.T) {
+		initialState := gonfa.State("Start")
+		states := []gonfa.State{"Start", "End"}
+		finalStates := []gonfa.State{"End"}
+		transitions := []Transition{
+			{From: "Start", To: "End", On: "finish"},
+			{From: "Start", To: "End", On: "finish"}, // Exact duplicate
+		}
+
+		err := checkStates(initialState, states, transitions, finalStates)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "duplicate transition from 'Start' to 'End' on event 'finish'")
 	})
 }
 
