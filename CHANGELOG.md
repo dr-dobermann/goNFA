@@ -5,6 +5,23 @@ All notable changes to the goNFA project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Enhanced Definition Validation**: Comprehensive integrity checking for state machine definitions
+- **Optimized Check Functions**: Improved performance with O(V+E) algorithms for state validation
+- **Duplicate Transition Detection**: Strict validation prevents exact duplicate transitions (From, To, Event)
+- **Comprehensive Test Coverage**: Extensive unit tests for all validation functions
+
+### Changed
+- **Breaking**: Duplicate transitions now cause errors instead of being silently deduplicated
+- **Improved**: Better error messages for validation failures
+- **Optimized**: State connectivity analysis using BFS instead of recursive traversal
+
+### Fixed
+- **Fixed**: Proper duplicate detection based on (From, To, Event) triplet
+- **Fixed**: Documentation links updated to correct file versions
+
 ## [3.8.0] - 2025-09-24
 
 ### Added

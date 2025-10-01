@@ -8,7 +8,7 @@ This package handles:
 - Immutable state machine definitions
 - YAML file loading with registry support
 - Transition and state configuration
-- Definition validation
+- Comprehensive definition validation and integrity checking
 
 ## Types
 
@@ -66,6 +66,44 @@ transitions:
     on: Submit
     guards: [hasPermission]
     actions: [notifyAuthor]
+```
+
+## Definition Validation
+
+The package performs comprehensive integrity checking when creating definitions:
+
+### Validation Rules
+
+1. **State Existence**: All states referenced in transitions must exist in the states map
+2. **Initial State**: Must exist in the states map and have outgoing transitions
+3. **Final States**: Must exist in the states map and have no outgoing transitions
+4. **Duplicate Transitions**: Exact duplicates (same From, To, Event) are forbidden
+5. **Connectivity**: 
+   - No hanging states (states with no incoming transitions except initial)
+   - No dead-end states (non-final states with no outgoing transitions)
+   - All final states must be reachable from the initial state
+
+### Error Examples
+
+```go
+// Duplicate transition error
+transitions := []Transition{
+    {From: "A", To: "B", On: "event1"},
+    {From: "A", To: "B", On: "event1"}, // Exact duplicate - ERROR
+}
+
+// Different events are allowed
+transitions := []Transition{
+    {From: "A", To: "B", On: "event1"},
+    {From: "A", To: "B", On: "event2"}, // Different event - OK
+}
+
+// Hanging state error
+states := []State{"Start", "Hanging", "End"}
+transitions := []Transition{
+    {From: "Start", To: "End", On: "finish"},
+    // No transitions TO "Hanging" - ERROR
+}
 ```
 
 ## API Reference

@@ -190,8 +190,8 @@ goNFA разделяет статические **Определения** и д
 
 ## Документация
 
-- [Техническая спецификация](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.ru.md) - Подробные технические требования
-- [Техническая спецификация (EN)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.md) - English version
+- [Техническая спецификация](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.ru.v3.8.md) - Подробные технические требования
+- [Техническая спецификация (EN)](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.v3.8.md) - English version
 - [Документация API](https://pkg.go.dev/github.com/dr-dobermann/gonfa) - Справочник GoDoc
 - [Примеры](examples/) - Рабочие примеры кода
 - [История изменений](CHANGELOG.md) - История версий и изменения

@@ -22,6 +22,7 @@ A universal, lightweight and idiomatic Go library for creating and managing non-
 - **Business Object Integration**: Attach user-defined business objects as StateExtenders
 - **Final States Support**: Explicit support for accepting/final states
 - **Extensible Actions & Guards**: Plugin-based system for custom business logic with full context access
+- **Strict Validation**: Comprehensive integrity checking prevents common state machine errors
 - **Comprehensive Testing**: >90% test coverage with extensive unit and integration tests
 - **Zero External Dependencies**: Core library has no external dependencies (except for YAML support)
 
@@ -86,7 +87,7 @@ func main() {
         WithGuards(&ManagerGuard{}).
         Build()
     if err != nil {
-        log.Fatal(err)
+        log.Fatal(err) // Will fail if definition has integrity issues
     }
 
     // Create business object
@@ -207,7 +208,7 @@ goNFA separates static **Definitions** from dynamic **Machine instances**:
 
 ## Documentation
 
-- [Technical Specification](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.md) - Detailed technical requirements
+- [Technical Specification](doc/SDR_Nondetermenistic_Finite_Automation_Go_lib.en.v3.8.md) - Detailed technical requirements
 - [API Documentation](https://pkg.go.dev/github.com/dr-dobermann/gonfa) - GoDoc reference
 - [Examples](examples/) - Working code examples
 - [Changelog](CHANGELOG.md) - Version history and changes
