@@ -1,0 +1,71 @@
+# Document Workflow State Machine Definition
+# This YAML file defines the same workflow as the document_workflow.go example
+# but using declarative configuration instead of programmatic building.
+
+initialState: Draft
+
+# Final (accepting) states - documents can end in Archived state
+finalStates:
+  - Archived
+
+# Global hooks executed on transition success/failure
+hooks:
+  onSuccess:
+    - logAction
+  onFailure:
+    - logFailure
+
+# State-specific actions
+states:
+  InReview:
+    onEntry:
+      - assignReviewer
+    onExit:
+      - logAction
+  Approved:
+    onEntry:
+      - logAction
+  Rejected:
+    onEntry:
+      - logAction
+  Archived:
+    onEntry:
+      - logAction
+
+# State transitions with guards and actions
+transitions:
+  # Submit document for review
+  - from: Draft
+    to: InReview
+    on: Submit
+    actions:
+      - notifyAuthor
+
+  # Manager can approve document
+  - from: InReview
+    to: Approved
+    on: Approve
+    guards:
+      - isManager
+
+  # Manager can reject document
+  - from: InReview
+    to: Rejected
+    on: Reject
+    guards:
+      - isManager
+
+  # Rejected document can be reworked
+  - from: Rejected
+    to: InReview
+    on: Rework
+
+  # Approved document can be archived
+  - from: Approved
+    to: Archived
+    on: Archive
+
+  # Rejected document can also be archived
+  - from: Rejected
+    to: Archived
+    on: Archive

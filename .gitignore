@@ -25,6 +25,7 @@ go.work
 /examples/*
 !/examples/*.go
 !/examples/*.md
+!/examples/*.yaml
 
 # IDE files
 .vscode/
